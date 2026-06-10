@@ -41,6 +41,7 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            /* padding-bottom removed to allow full height views */
         }
 
         /* =============================================
@@ -184,6 +185,23 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
+            position: relative;
+        }
+
+        .bell-badge {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            width: 10px;
+            height: 10px;
+            background: #FF4757;
+            border: 2px solid #9B1A1A;
+            border-radius: 50%;
+            display: none;
+        }
+
+        .bell-badge.show {
+            display: block;
         }
 
         .bell-btn svg {
@@ -1109,15 +1127,15 @@
             color: #9B1A1A;
         }
 
-        /* Checkout button — absolute at bottom (no navbar on cart view) */
+        /* CHECKOUT BAR — Fixed at bottom */
         .checkout-bar {
             position: absolute;
             bottom: 0;
             left: 0;
             right: 0;
-            padding: 16px 16px 20px;
-            background: linear-gradient(to top, #EDE0D0 80%, rgba(237, 224, 208, 0));
-            z-index: 100;
+            padding: 16px 20px 16px; /* Sejajar dengan area navbar yang sekarang kosong */
+            background: linear-gradient(to top, #F9F4EB 80%, transparent);
+            z-index: 400;
         }
 
         .checkout-btn {
@@ -1126,35 +1144,211 @@
             color: white;
             border: none;
             border-radius: 50px;
-            padding: 15px;
-            font-size: 0.95rem;
+            padding: 16px;
+            font-size: 1rem;
             font-weight: 700;
-            font-family: inherit;
             cursor: pointer;
-            transition: background 0.2s;
+            font-family: inherit;
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 8px 24px rgba(155, 26, 26, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .checkout-btn:hover {
             background: #7f1414;
         }
 
-        /* Empty state */
-        .empty-state {
-            padding: 60px 16px;
+        .checkout-btn:active {
+            transform: scale(0.98);
+        }
+
+        .checkout-btn:disabled {
+            background: #CCC;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        /* Checkout button — absolute at bottom (no navbar on cart view) */
+        /* CHECKOUT OVERLAY */
+        .ovl-checkout {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+        }
+
+        .ovl-checkout.show {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px;
-            color: #CCC;
+        }
+
+        .chk-card {
+            background: #F9F4EB;
+            width: 100%;
+            max-width: 420px;
+            border-top-left-radius: 30px;
+            border-top-right-radius: 30px;
+            padding: 32px 24px;
+            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .chk-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #1A1A1A;
+            margin-bottom: 24px;
             text-align: center;
         }
 
+        .chk-label {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .chk-input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #E0D5C5;
+            border-radius: 16px;
+            background: white;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            font-family: inherit;
+        }
+
+        .pay-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .pay-opt {
+            padding: 16px 8px;
+            border: 2px solid #E0D5C5;
+            border-radius: 16px;
+            background: white;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .pay-opt.active {
+            border-color: #9B1A1A;
+            background: #FDF2F2;
+        }
+
+        .pay-icon {
+            font-size: 1.5rem;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .pay-name {
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
+
+        .receipt-sec {
+            background: #FFF;
+            border: 2px dashed #9B1A1A;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 24px;
+            cursor: pointer;
+        }
+
+        .receipt-info {
+            color: #9B1A1A;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .chk-foot {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-cancel {
+            flex: 1;
+            padding: 16px;
+            border-radius: 50px;
+            border: 2px solid #E0D5C5;
+            background: white;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-confirm {
+            flex: 2;
+            padding: 16px;
+            border-radius: 50px;
+            background: #9B1A1A;
+            color: white;
+            border: none;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(155, 26, 26, 0.3);
+        }
+
+        /* Empty state */
+        .empty-state {
+            padding: 80px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            color: #555; /* Warna lebih gelap agar kontras */
+            text-align: center;
+            background: transparent;
+        }
+
         .empty-state .e-icon {
-            font-size: 4rem;
+            font-size: 5rem;
+            color: #9B1A1A; /* Warna merah chicken */
+            opacity: 0.2;
+            margin-bottom: 10px;
+        }
+
+        .empty-state h3 {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #1A1A1A;
+            margin: 0;
         }
 
         .empty-state p {
             font-size: 0.9rem;
+            color: #888;
+            max-width: 250px;
+            line-height: 1.5;
+        }
+
+        /* Animations */
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.4); }
+            100% { transform: scale(1); }
+        }
+        .pop-anim {
+            animation: pop 0.3s ease-out;
         }
 
         /* =============================================
@@ -1392,6 +1586,155 @@
                 box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
             }
         }
+
+        /* --- NOTIFICATIONS --- */
+        .ovl-noti {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1500;
+            display: none;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 80px;
+            backdrop-filter: blur(4px);
+        }
+
+        .ovl-noti.show {
+            display: flex;
+        }
+
+        .noti-card {
+            background: #F9F4EB;
+            width: 90%;
+            max-width: 380px;
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .noti-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .noti-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #1A1A1A;
+        }
+
+        .noti-close {
+            font-size: 0.9rem;
+            color: #9B1A1A;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .noti-item {
+            background: white;
+            border-radius: 16px;
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: transform 0.1s;
+            border: 1px solid #EEE;
+        }
+
+        .noti-item:active {
+            transform: scale(0.98);
+        }
+
+        .noti-icon {
+            width: 44px;
+            height: 44px;
+            background: #FDF2F2;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9B1A1A;
+        }
+
+        .noti-info {
+            flex: 1;
+        }
+
+        .noti-text {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #1A1A1A;
+            margin-bottom: 2px;
+        }
+
+        .noti-status {
+            font-size: 0.8rem;
+            color: #27ae60;
+            font-weight: 600;
+        }
+
+        .noti-empty {
+            text-align: center;
+            padding: 30px 10px;
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        /* --- ACTIVE ORDER BAR --- */
+        .active-order-bar {
+            position: absolute;
+            bottom: 85px;
+            left: 20px;
+            right: 20px;
+            background: #9B1A1A;
+            color: white;
+            padding: 14px 18px;
+            border-radius: 16px;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 8px 24px rgba(155, 26, 26, 0.3);
+            z-index: 100;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .active-order-bar:active {
+            transform: scale(0.97);
+        }
+
+        .aob-icon {
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .aob-text {
+            flex: 1;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .aob-text b {
+            display: block;
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
     </style>
 </head>
 
@@ -1409,11 +1752,12 @@
                         <p class="hdr-greet">Halo, selamat datang</p>
                         <div class="hdr-name">{{ Auth::user()->name ?? 'Hayo Guest' }}</div>
                     </div>
-                    <button class="bell-btn">
+                    <button class="bell-btn" onclick="toggleNoti()">
                         <svg viewBox="0 0 24 24">
                             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
                             <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                         </svg>
+                        <div class="bell-badge" id="bell-badge"></div>
                     </button>
                 </div>
                 <form action="{{ route('home') }}" method="GET" class="search-bar">
@@ -1456,7 +1800,7 @@
 
                         <!-- Banner 1: Best Seller (Oranye) -->
                         <div style="flex:0 0 100%; scroll-snap-align:center; border-radius:20px; overflow:hidden; position:relative; height:140px; background:linear-gradient(135deg,#FF7B00,#D46128); display:flex; align-items:center; padding:20px; gap:0; box-shadow:0 6px 18px rgba(200,80,0,0.35); cursor:pointer;"
-                            onclick="window.location.href='{{ url('/produk') }}/1'">
+                            onclick="window.location.href='{{ url('/produk') }}/5'">
                             <div style="flex:1; z-index:2;">
                                 <div class="b-new">Best Seller</div>
                                 <div class="b-sub">Ayam geprek + sambal<br>matah</div>
@@ -1477,7 +1821,7 @@
 
                         <!-- Banner 2: New Menu (Kuning) -->
                         <div style="flex:0 0 100%; scroll-snap-align:center; border-radius:20px; overflow:hidden; position:relative; height:140px; background:linear-gradient(135deg,#F0C830,#C8930D); display:flex; align-items:center; padding:20px; gap:0; box-shadow:0 6px 18px rgba(200,140,0,0.35); cursor:pointer;"
-                            onclick="window.location.href='{{ url('/produk') }}/2'">
+                            onclick="window.location.href='{{ url('/produk') }}/6'">
                             <div style="flex:1; z-index:2;">
                                 <div class="b-new">New Menu</div>
                                 <div class="b-sub">Mie jebew ayam saus<br>keju</div>
@@ -1527,7 +1871,7 @@
                 <div class="populer-section">
                     <div class="sec-head">
                         <span class="sec-title">Menu Populer</span>
-                        <button class="lihat-btn">Lihat Semua</button>
+                    <button class="lihat-btn" id="btn-see-all" onclick="toggleSeeAll()">Lihat Semua</button>
                     </div>
                     <div class="prod-grid" id="prod-grid">
                         <!-- Dirender oleh JS -->
@@ -1549,14 +1893,15 @@
                 <span class="cart-title">Keranjang</span>
             </div>
 
+            <!-- Scroll area untuk item keranjang -->
             <div class="scroll-area cart-scroll">
                 <div class="cart-inner" id="cart-inner">
                     <!-- Dirender oleh JS -->
                 </div>
             </div>
 
-            <!-- Checkout button (di atas navbar) -->
-            <div class="checkout-bar" id="checkout-bar" style="display:none;">
+            <!-- Checkout button di bawah scroll -->
+            <div class="checkout-bar" id="checkout-bar" style="display:none; padding-bottom: 10px;">
                 <input type="file" id="qris-upload" style="display:none" accept="image/*">
                 <button class="checkout-btn" id="checkout-btn" onclick="doCheckout()">Checkout</button>
             </div>
@@ -1691,6 +2036,32 @@
             </div>
         </div>
 
+        <!-- NOTIFICATION OVERLAY -->
+        <div class="ovl-noti" id="ovl-noti" onclick="toggleNoti()">
+            <div class="noti-card" onclick="event.stopPropagation()">
+                <div class="noti-head">
+                    <div class="noti-title">Pesananku</div>
+                    <div class="noti-close" onclick="toggleNoti()">Tutup</div>
+                </div>
+                <div id="noti-list">
+                    <!-- Dinamis via JS -->
+                    <div class="noti-empty">Memuat pesanan...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FLOATING ACTIVE ORDER BAR -->
+        <div class="active-order-bar" id="active-order-bar" onclick="toggleNoti()">
+            <div class="aob-icon">
+                <svg viewBox="0 0 24 24" width="20" height="20" stroke="white" fill="none" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div class="aob-text">
+                <span id="aob-count">1 Pesanan Aktif</span>
+                <b>Pantau Status Pesananmu</b>
+            </div>
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="white" fill="none" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+
         <!-- ================================================
          NAVBAR BAWAH
     ================================================ -->
@@ -1779,11 +2150,7 @@
                     <button class="c-btn c-btn-no" onclick="closeConfirm()">Batal</button>
                     <button class="c-btn c-btn-yes" id="confirm-yes-btn">Ya, Lanjutkan</button>
                 </div>
-            </div>
         </div>
-    </div>
-
-
     </div>
 
     <script>
@@ -1805,6 +2172,7 @@
         async function apiFetch(url, method = 'GET', body = null) {
             const options = {
                 method,
+                credentials: 'same-origin', // WAJIB: kirim session cookie Laravel
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
@@ -1816,13 +2184,13 @@
             try {
                 const response = await fetch(url, options);
                 if (response.status === 401) {
-                    window.location.href = '{{ route('login') }}';
+                    console.warn("API 401: Unauthorized. Pastikan sudah login.");
                     return null;
                 }
                 return await response.json();
             } catch (err) {
                 console.error("API Error:", err);
-                return { success: false, message: "Koneksi bermasalah." };
+                return null;
             }
         }
 
@@ -1858,13 +2226,44 @@
            NAVIGASI
         ================================================== */
         function switchView(name) {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            console.log("Navigating to:", name);
+            
+            // 1. Sembunyikan SEMUA view
+            document.querySelectorAll('.view').forEach(v => {
+                v.classList.remove('active');
+                v.style.display = 'none';
+            });
+            
+            // 2. Nonaktifkan SEMUA tombol nav
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('view-' + name).classList.add('active');
-            const navBtn = document.getElementById('nav-' + name);
-            if (navBtn) navBtn.classList.add('active');
-            if (name === 'cart') loadCart();
-            if (name === 'fav') loadFavorites();
+            
+            // 3. Tampilkan View target
+            const target = document.getElementById('view-' + name);
+            if (target) {
+                target.classList.add('active');
+                target.style.display = 'flex';
+                
+                // Urusi header khusus jika ada
+                if (name === 'home') document.getElementById('view-home').style.display = 'flex';
+            } else {
+                // Fallback ke home
+                document.getElementById('view-home').classList.add('active');
+                document.getElementById('view-home').style.display = 'flex';
+            }
+            
+            // 4. Aktifkan Tombol Nav
+            const btn = document.getElementById('nav-' + name);
+            if (btn) btn.classList.add('active');
+
+            // 5. Toggle Navbar (Hidden on Cart/Fav as they have their own back buttons)
+            const navbar = document.querySelector('.navbar');
+            if (navbar) {
+                navbar.style.display = (name === 'cart' || name === 'fav') ? 'none' : 'flex';
+            }
+
+            // 6. Render Data
+            if (name === 'cart') renderCart();
+            if (name === 'fav') renderFav();
         }
 
         function updateBadge() {
@@ -1880,24 +2279,34 @@
            CART (Server-Side)
         ================================================== */
         async function loadCart() {
-            const res = await apiFetch('/api/v1/cart');
+            const res = await apiFetch('/web/cart');
             if (res && res.success) {
                 cartItems = res.data;
                 updateBadge();
+                syncCartToStorage();
                 if (document.getElementById('view-cart').classList.contains('active')) renderCart();
             }
         }
 
         async function addToCart(productId) {
-            const res = await apiFetch('/api/v1/cart', 'POST', {
+            const res = await apiFetch('/web/cart', 'POST', {
                 product_id: productId,
                 quantity: 1
             });
             if (res && res.success) {
                 await loadCart();
-                // Optional: show toast/notif
-            } else {
+                // Visual feedback: tombol berkedip hijau
+                const btns = document.querySelectorAll(`.plus-btn[onclick*="addToCart(${productId})"]`);
+                btns.forEach(btn => {
+                    const orig = btn.textContent;
+                    btn.textContent = '✓';
+                    btn.style.background = '#27ae60';
+                    setTimeout(() => { btn.textContent = orig; btn.style.background = ''; }, 1000);
+                });
+            } else if (res) {
                 alert(res.message || "Gagal menambah ke keranjang.");
+            } else {
+                alert("Gagal menambah ke keranjang. Coba login ulang.");
             }
         }
 
@@ -1909,7 +2318,7 @@
             if (newQty <= 0) {
                 await removeCartItem(item.id);
             } else {
-                const res = await apiFetch(`/api/v1/cart/${item.id}`, 'PATCH', {
+                const res = await apiFetch(`/web/cart/${item.id}`, 'PATCH', {
                     quantity: newQty
                 });
                 if (res && res.success) await loadCart();
@@ -1917,12 +2326,12 @@
         }
 
         async function removeCartItem(itemId) {
-            const res = await apiFetch(`/api/v1/cart/${itemId}`, 'DELETE');
+            const res = await apiFetch(`/web/cart/${itemId}`, 'DELETE');
             if (res && res.success) await loadCart();
         }
 
         async function toggleCheck(itemId) {
-            const res = await apiFetch(`/api/v1/cart/${itemId}/toggle-check`, 'PATCH');
+            const res = await apiFetch(`/web/cart/${itemId}/toggle-check`, 'PATCH');
             if (res && res.success) await loadCart();
         }
 
@@ -1930,20 +2339,20 @@
             // Bulk delete not implemented in backend yet, so we delete each for now
             // or just refresh
             for (const item of cartItems) {
-                await apiFetch(`/api/v1/cart/${item.id}`, 'DELETE');
+                await apiFetch(`/web/cart/${item.id}`, 'DELETE');
             }
             await loadCart();
         }
 
         function syncCartToStorage() {
             const hcCart = {};
-            Object.entries(cart).forEach(([id, qty]) => {
-                const item = menu.find(m => m.id === parseInt(id));
-                if (!item) return;
-                hcCart[id] = {
-                    id: item.id, name: item.name, img: item.img,
-                    basePrice: item.price, addChecked: [false, false, false],
-                    addExtra: 0, qty: qty, catatan: ''
+            cartItems.forEach(item => {
+                const p = item.product;
+                if (!p) return;
+                hcCart[p.id] = {
+                    id: p.id, name: p.name, img: p.image_url,
+                    basePrice: p.base_price, addChecked: [],
+                    addExtra: 0, qty: item.quantity, catatan: item.note || ''
                 };
             });
             localStorage.setItem('hc_cart', JSON.stringify(hcCart));
@@ -1962,12 +2371,13 @@
 
             if (cartItems.length === 0) {
                 inner.innerHTML = `
-          <div class="empty-state">
-            <div class="e-icon"><svg viewBox="0 0 24 24" width="60" height="60" stroke="#ccc" stroke-width="1.5" fill="none"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div>
-            <p>Keranjang masih kosong</p>
-            <button class="shop-btn" onclick="switchView('home')" style="background:#9B1A1A; color:white; border:none; padding:10px 20px; border-radius:50px; margin-top:15px; cursor:pointer;">Mulai Belanja</button>
+          <div class="empty-state" style="padding: 100px 20px;">
+            <div class="e-icon" style="margin-bottom:20px; opacity:0.6;"><svg viewBox="0 0 24 24" width="80" height="80" stroke="#9B1A1A" stroke-width="1.5" fill="none"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div>
+            <h3 style="color:#1A1A1A; margin-bottom:8px;">Keranjang Kosong</h3>
+            <p style="color:#888; font-size:0.9rem; margin-bottom:24px;">Kamu belum menambahkan menu apapun ke keranjang.</p>
+            <button class="shop-btn" onclick="switchView('home')" style="background:#9B1A1A; color:white; border:none; padding:12px 24px; border-radius:50px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(155,26,26,0.3);">Mulai Belanja Sekarang</button>
           </div>`;
-                bar.style.display = 'none';
+                if(bar) bar.style.display = 'none';
                 return;
             }
 
@@ -2022,7 +2432,7 @@
            FAVORIT (Server-Side)
         ================================================== */
         async function loadFavorites() {
-            const res = await apiFetch('/api/v1/favorites');
+            const res = await apiFetch('/web/favorites');
             if (res && res.success) {
                 favoriteIds = new Set(res.data.map(f => f.product_id));
                 updateHeartButtons();
@@ -2031,11 +2441,18 @@
         }
 
         async function toggleFav(id) {
-            const res = await apiFetch('/api/v1/favorites/toggle', 'POST', {
+            const res = await apiFetch('/web/favorites/toggle', 'POST', {
                 product_id: id
             });
             if (res && res.success) {
                 await loadFavorites();
+                const btns = document.querySelectorAll(`.heart-btn[data-id="${id}"]`);
+                btns.forEach(btn => {
+                    btn.classList.add('pop-anim');
+                    setTimeout(() => btn.classList.remove('pop-anim'), 300);
+                });
+            } else if (!res) {
+                console.warn("Gagal menyimpan favorit.");
             }
         }
 
@@ -2054,9 +2471,11 @@
             const body = document.getElementById('fav-body');
             if (favoriteIds.size === 0) {
                 body.innerHTML = `
-          <div class="empty-state">
-            <div class="e-icon"><svg viewBox="0 0 24 24" width="60" height="60" stroke="#ccc" stroke-width="1.5" fill="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></div>
-            <p>Belum ada menu favorit</p>
+          <div class="empty-state" style="padding: 100px 20px;">
+            <div class="e-icon" style="margin-bottom:20px; opacity:0.6;"><svg viewBox="0 0 24 24" width="80" height="80" stroke="#9B1A1A" stroke-width="1.5" fill="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></div>
+            <h3 style="color:#1A1A1A; margin-bottom:8px;">Favorit Kosong</h3>
+            <p style="color:#888; font-size:0.9rem; margin-bottom:24px;">Belum ada menu yang kamu tandai sebagai favorit.</p>
+            <button class="shop-btn" onclick="switchView('home')" style="background:#9B1A1A; color:white; border:none; padding:12px 24px; border-radius:50px; font-weight:700; cursor:pointer;">Cari Menu Favorit</button>
           </div>`;
                 return;
             }
@@ -2148,89 +2567,149 @@
             if (view === 'cart') switchView('cart');
         }
 
-        async function doCheckout() {
+        let selectedPaymentMethod = 'CASH';
+
+        function selectPayment(method, el) {
+            selectedPaymentMethod = method;
+            document.querySelectorAll('.pay-opt').forEach(opt => opt.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('qris-info').style.display = (method === 'QRIS_MANUAL' ? 'block' : 'none');
+        }
+
+        function handleReceipt(input) {
+            if (input.files && input.files[0]) {
+                document.getElementById('receipt-preview').innerHTML = `<span style="color:#27ae60">✅ File terpilih: ${input.files[0].name}</span>`;
+            }
+        }
+
+        function openCheckout() {
             const cnt = cartCount();
             if (cnt === 0) return alert("Keranjang masih kosong!");
+            window.location.href = '{{ route('checkout') }}';
+        }
 
-            const address = prompt("Masukkan alamat pengiriman:", "Jl. Merdeka No. 123");
-            if (!address) return;
+        function closeCheckout() {
+            document.getElementById('ovl-checkout').classList.remove('show');
+        }
 
-            const payment = prompt("Pilih metode pembayaran (CASH, COD, QRIS):", "CASH").toUpperCase();
-            if (!['CASH', 'COD', 'QRIS'].includes(payment)) return alert("Metode pembayaran tidak valid!");
+        async function doCheckout() {
+            // Fungsi ini sekarang hanya membuka modal (diaktifkan tombol checkout lama)
+            openCheckout();
+        }
+
+        async function confirmCheckout() {
+            const address = document.getElementById('chk-address').value;
+            if (!address) return alert("Mohon isi alamat pengiriman!");
+
+            const btn = document.getElementById('btn-submit-order');
+            btn.textContent = 'Memproses...';
+            btn.disabled = true;
 
             const formData = new FormData();
             formData.append('delivery_address', address);
-            formData.append('payment_method', payment);
-            
-            const items = {};
-            cartItems.filter(i => i.is_checked).forEach(item => {
-                items[item.product_id] = { qty: item.quantity, extras: item.selected_extras_snapshot || [] };
-            });
-            formData.append('items', JSON.stringify(items));
+            formData.append('payment_method', selectedPaymentMethod);
 
-            if (payment === 'QRIS') {
-                alert("Silakan pilih bukti transfer QRIS kamu.");
-                const fileInput = document.getElementById('qris-upload');
-                fileInput.click();
-                
-                // Wait for file selection
-                await new Promise(resolve => {
-                    fileInput.onchange = () => {
-                        if (fileInput.files[0]) formData.append('payment_receipt', fileInput.files[0]);
-                        resolve();
-                    };
-                });
-                if (!formData.has('payment_receipt')) return alert("Bukti transfer wajib diunggah untuk metode QRIS!");
+            if (selectedPaymentMethod === 'QRIS_MANUAL') {
+                const fileInput = document.getElementById('receipt-file');
+                if (!fileInput.files[0]) {
+                    btn.textContent = 'Pesan Sekarang';
+                    btn.disabled = false;
+                    return alert("Bukti transfer wajib diunggah untuk metode QRIS!");
+                }
+                formData.append('payment_receipt', fileInput.files[0]);
             }
 
             try {
                 const response = await fetch('{{ route('order.checkout') }}', {
                     method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
                     body: formData
                 });
 
                 const res = await response.json();
-                if (res.success) {
-                    alert(res.message + " Nomor Pesanan: " + res.order_number);
-                    clearCart();
-                    switchView('home');
+                if (res.success || response.ok) {
+                    await clearCart();
+                    // Gunakan ID dari respons untuk redirect ke halaman sukses
+                    const orderId = res.data ? res.data.id : (res.order ? res.order.id : null);
+                    if (orderId) {
+                        window.location.href = '{{ route('order.success', ':id') }}'.replace(':id', orderId);
+                    } else {
+                        window.location.href = '{{ route('order.active') }}';
+                    }
                 } else {
-                    alert(res.message || "Gagal melakukan checkout.");
+                    alert("Checkout Gagal: " + (res.message || "Terjadi kesalahan."));
                 }
             } catch (err) {
                 console.error(err);
-                alert("Terjadi kesalahan koneksi.");
+                alert("Kesalahan koneksi saat checkout.");
+            } finally {
+                btn.textContent = 'Pesan Sekarang';
+                btn.disabled = false;
             }
         }
 
         /* ==================================================
            RENDER PRODUK HOME
            ================================================== */
+        let isShowingAll = false;
+        function toggleSeeAll() {
+            isShowingAll = !isShowingAll;
+            const btn = document.getElementById('btn-see-all');
+            if (btn) btn.textContent = isShowingAll ? 'Sembunyikan' : 'Lihat Semua';
+            renderProducts();
+        }
+
         function renderProducts() {
             const grid = document.getElementById('prod-grid');
             if (!grid) return;
-            grid.innerHTML = menu.map(item => `
-      <div class="prod-card" onclick="window.location.href='{{ url('/produk') }}/${item.id}'">
-        <div class="prod-top">
-          <button class="heart-btn ${favoriteIds.has(item.id) ? 'liked' : ''}" data-id="${item.id}"
-            onclick="event.stopPropagation(); toggleFav(${item.id})">
+            
+            try {
+                // Safety check: Pastikan menu adalah array
+                if (!Array.isArray(menu)) {
+                    console.error("Menu data is not an array:", menu);
+                    grid.innerHTML = '<p style="text-align:center; padding:20px; color:#999;">Gagal memuat menu.</p>';
+                    return;
+                }
+
+                // Default ke Set kosong jika favoriteIds bermasalah
+                const favs = (favoriteIds instanceof Set) ? favoriteIds : new Set();
+
+                const displayMenu = isShowingAll ? menu : menu.slice(0, 4);
+
+                if (displayMenu.length === 0) {
+                    grid.innerHTML = '<p style="text-align:center; padding:20px; color:#999;">Menu sedang tidak tersedia.</p>';
+                    return;
+                }
+
+                grid.innerHTML = displayMenu.map(item => {
+                    const pid = item.id || 0;
+                    const pname = item.name || 'Produk';
+                    const pdesc = item.description || '';
+                    const pprice = item.base_price || 0;
+
+                    return `
+      <div class="prod-card">
+        <div class="prod-top" onclick="window.location.href='/produk/${pid}'" style="cursor:pointer;">
+          <button class="heart-btn ${favs.has(pid) ? 'liked' : ''}" data-id="${pid}"
+            onclick="event.stopPropagation(); toggleFav(${pid});">
             <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
           </button>
           <div class="prod-food">${foodHtml(item, 120)}</div>
         </div>
         <div class="prod-bottom">
-          <div class="prod-name">${item.name}</div>
-          <div class="prod-desc">${item.description}</div>
+          <div class="prod-name" onclick="window.location.href='/produk/${pid}'" style="cursor:pointer;">${pname}</div>
+          <div class="prod-desc">${pdesc}</div>
           <div class="prod-foot">
-            <span class="prod-price">${rp(item.base_price)}</span>
-            <button class="plus-btn" onclick="event.stopPropagation(); addToCart(${item.id})">+</button>
+            <span class="prod-price">${rp(pprice)}</span>
+            <button class="plus-btn" onclick="addToCart(${pid})" style="z-index:10; position:relative;">+</button>
           </div>
         </div>
-      </div>`
-            ).join('');
+      </div>`;
+                }).join('');
+            } catch (err) {
+                console.error("Render Error:", err);
+                grid.innerHTML = '<p style="text-align:center; padding:20px; color:#999;">Gagal memproses tampilan menu.</p>';
+            }
         }
 
         /* ==================================================
@@ -2243,10 +2722,32 @@
             document.getElementById('ovl-profile').classList.remove('show');
         }
 
+        /* ==================================================
+           INITIALIZATION
+           ================================================== */
         async function initData() {
-            await loadFavorites();
-            await loadCart();
-            renderProducts();
+            try {
+                // PRIORITAS 1: Render menu secepat mungkin (pakai data sinkron dari Blade)
+                renderProducts();
+
+                // PRIORITAS 2: Load data dinamis (boleh gagal/lambat)
+                await Promise.allSettled([
+                    loadFavorites(),
+                    loadCart()
+                ]);
+
+                // Render ulang setelah favorites/cart termuat (untuk update badge/hati)
+                renderProducts();
+
+                // Navigasi awal
+                const params = new URLSearchParams(window.location.search);
+                const initialView = params.get('v') || 'home';
+                switchView(initialView);
+            } catch (err) {
+                console.error("Initialization Error:", err);
+                // Fallback minimal
+                renderProducts();
+            }
         }
         initData();
 
@@ -2261,9 +2762,9 @@
             localStorage.setItem('userRole', '{{ session('userRole') }}');
         @endif
 
-        // Load user info
-        const storedName = localStorage.getItem('userName') || 'Hayo Guest';
-        const storedEmail = localStorage.getItem('userEmail') || 'guest@gmail.com';
+        // Load user info from Auth if available, fallback to localStorage
+        const storedName = "{{ Auth::user()->name ?? '' }}" || localStorage.getItem('userName') || 'Hayo Guest';
+        const storedEmail = "{{ Auth::user()->email ?? '' }}" || localStorage.getItem('userEmail') || 'guest@gmail.com';
 
         document.querySelectorAll('.hdr-name, .prof-name').forEach(el => el.textContent = storedName);
         document.querySelectorAll('.prof-email').forEach(el => el.textContent = storedEmail);
@@ -2303,7 +2804,129 @@
             switchView(viewParam);
         }
 
+        // Jalankan Inisialisasi Data
+        initData();
+
+        // --- NOTIFICATIONS ---
+        async function fetchOrders() {
+            try {
+                const response = await fetch('{{ route('web.orders.index') }}');
+                const res = await response.json();
+                if (res.success) {
+                    return res.data;
+                }
+            } catch (err) {
+                console.error("Failed to fetch orders:", err);
+            }
+            return [];
+        }
+
+        async function toggleNoti() {
+            const ovl = document.getElementById('ovl-noti');
+            const isShowing = ovl.classList.contains('show');
+            
+            if (!isShowing) {
+                ovl.classList.add('show');
+                const list = document.getElementById('noti-list');
+                const orders = await fetchOrders();
+                
+                // Active statuses: NEW, PENDING_VERIFICATION, PROCESSING, DELIVERING
+                const activeOrders = orders.filter(o => !['DONE', 'REJECTED'].includes(o.status));
+                
+                if (activeOrders.length === 0) {
+                    list.innerHTML = '<div class="noti-empty">Tidak ada pesanan aktif</div>';
+                } else {
+                    list.innerHTML = activeOrders.map(o => {
+                        let statusText = o.status;
+                        if (o.status === 'NEW') statusText = 'Diproses (Baru)';
+                        if (o.status === 'PENDING_VERIFICATION') statusText = 'Menunggu Verifikasi';
+                        if (o.status === 'PROCESSING') statusText = 'Sedang Dimasak';
+                        if (o.status === 'DELIVERING') statusText = o.payment_method === 'CASH' ? 'Siap Diambil' : 'Dalam Pengiriman';
+                        
+                        return `
+                            <div class="noti-item" onclick="window.location.href='/pesanan/status/${o.id}'">
+                                <div class="noti-icon">
+                                    <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2.2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                                </div>
+                                <div class="noti-info">
+                                    <div class="noti-text">Pesanan #${o.order_number}</div>
+                                    <div class="noti-status">${statusText}</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            } else {
+                ovl.classList.remove('show');
+            }
+        }
+
+        // Initialize badge on load
+        async function initNotiBadge() {
+            const orders = await fetchOrders();
+            const activeOrders = orders.filter(o => !['DONE', 'REJECTED'].includes(o.status));
+            const activeCount = activeOrders.length;
+            
+            const badge = document.getElementById('bell-badge');
+            const bar = document.getElementById('active-order-bar');
+            const countText = document.getElementById('aob-count');
+            
+            if (activeCount > 0) {
+                badge.classList.add('show');
+                if (bar) {
+                    bar.style.display = 'flex';
+                    countText.textContent = `${activeCount} Pesanan Aktif`;
+                }
+            } else {
+                badge.classList.remove('show');
+                if (bar) bar.style.display = 'none';
+            }
+        }
+        initNotiBadge();
+
     </script>
+    <!-- CHECKOUT OVERLAY -->
+    <div class="ovl-checkout" id="ovl-checkout" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:1000; align-items:flex-end; justify-content:center; backdrop-filter:blur(8px);">
+        <div class="chk-card">
+            <div class="chk-title">Konfirmasi Pesanan</div>
+            
+            <label class="chk-label">Alamat Pengiriman</label>
+            <textarea id="chk-address" class="chk-input" rows="3" placeholder="Jl. Mawar No. 123..."></textarea>
+            
+            <label class="chk-label">Metode Pembayaran</label>
+            <div class="pay-grid" id="pay-grid">
+                <div class="pay-opt active" onclick="selectPayment('CASH', this)">
+                    <span class="pay-icon">💵</span>
+                    <span class="pay-name">Tunai</span>
+                </div>
+                <div class="pay-opt" onclick="selectPayment('COD', this)">
+                    <span class="pay-icon">🛵</span>
+                    <span class="pay-name">COD</span>
+                </div>
+                <div class="pay-opt" onclick="selectPayment('QRIS_MANUAL', this)">
+                    <span class="pay-icon">📱</span>
+                    <span class="pay-name">QRIS</span>
+                </div>
+            </div>
+
+            <div id="qris-info" style="display:none;">
+                <label class="chk-label">Scan QRIS & Unggah Bukti</label>
+                <div class="receipt-sec" onclick="document.getElementById('receipt-file').click()">
+                    <div id="receipt-preview" class="receipt-info">
+                        <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><br>
+                        Klik untuk upload bukti bayar
+                    </div>
+                </div>
+                <input type="file" id="receipt-file" style="display:none" accept="image/*" onchange="handleReceipt(this)">
+            </div>
+
+            <div class="chk-foot">
+                <button class="btn-cancel" onclick="closeCheckout()">Batal</button>
+                <button class="btn-confirm" id="btn-submit-order" onclick="confirmCheckout()">Pesan Sekarang</button>
+            </div>
+        </div>
+    </div>
+
 </body>
 
 </html>

@@ -583,7 +583,8 @@
                     dotCls = (step.key === 'pending_verification') ? 'active-blue' : 'active';
                     titleCls = dotCls;
                     icon = (step.key === 'pending_verification') ? clockSvg : checkSvg;
-                } else if (i === currentIdx + 1) {
+                } else if (i === currentIdx + 1 && currentStatus !== 'pending_verification') {
+                    // Hanya tandai "next" (orange) jika status sekarang BUKAN menunggu verifikasi
                     dotCls = 'next'; titleCls = 'next'; icon = clockSvg;
                 } else {
                     dotCls = 'waiting'; titleCls = 'waiting'; icon = clockSvg;

@@ -345,6 +345,7 @@
         async function apiFetch(url, method = 'GET', body = null) {
             const options = {
                 method,
+                credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
@@ -367,7 +368,7 @@
         }
 
         async function loadCartData() {
-            const res = await apiFetch('/api/v1/cart');
+            const res = await apiFetch('/web/cart');
             if (res && res.success) {
                 cartItems = res.data;
                 render();
@@ -449,9 +450,9 @@
 
             const newQty = item.quantity + d;
             if (newQty <= 0) {
-                await apiFetch(`/api/v1/cart/${item.id}`, 'DELETE');
+                await apiFetch(`/web/cart/${item.id}`, 'DELETE');
             } else {
-                await apiFetch(`/api/v1/cart/${item.id}`, 'PATCH', { quantity: newQty });
+                await apiFetch(`/web/cart/${item.id}`, 'PATCH', { quantity: newQty });
             }
             await loadCartData();
         }

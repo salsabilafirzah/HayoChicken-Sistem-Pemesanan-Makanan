@@ -20,6 +20,7 @@ class OrderController extends Controller
     {
         $request->validate([
             'delivery_address' => 'required|string',
+            'delivery_note' => 'nullable|string|max:500',
             'payment_method' => 'required|in:CASH,COD,QRIS_MANUAL',
             'payment_receipt' => 'required_if:payment_method,QRIS_MANUAL|nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
@@ -74,7 +75,7 @@ class OrderController extends Controller
                 $itemsToProcess[] = [
                     'product_id' => $product->id,
                     'name_snapshot' => $product->name,
-                    'price_snapshot' => $unitPrice,
+                    'price_at_order' => $unitPrice,
                     'quantity' => $qty,
                     'subtotal' => $subtotal,
                     'extras_snapshot' => $extrasSnapshot, 
@@ -100,6 +101,7 @@ class OrderController extends Controller
                 'user_id' => $user->id,
                 'status' => ($request->payment_method === 'QRIS_MANUAL') ? 'PENDING_VERIFICATION' : 'NEW',
                 'delivery_address' => $request->delivery_address,
+                'delivery_note' => $request->delivery_note,
                 'payment_method' => $request->payment_method,
                 'payment_receipt' => $receiptPath,
                 'total_amount' => $totalAmount,
@@ -112,7 +114,7 @@ class OrderController extends Controller
                     'product_id' => $item['product_id'],
                     'product_name_snapshot' => $item['name_snapshot'],
                     'quantity' => $item['quantity'],
-                    'price_at_order' => $item['price_snapshot'],
+                    'price_at_order' => $item['price_at_order'],
                     'selected_extras_snapshot' => $item['extras_snapshot'],
                     'subtotal' => $item['subtotal'],
                     'note' => $item['note'], // [Fase 14] Simpan note per item
@@ -136,6 +138,7 @@ class OrderController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Pesanan berhasil dikirim!',
+                'data' => $order,
                 'order_id' => $order->id,
                 'order_number' => $order->order_number
             ]);

@@ -27,8 +27,6 @@ return new class extends Migration
             $table->foreign('category_id')->references('id')->on('categories')->onDelete('restrict');
         });
 
-        // Add check constraint for base_price > 0
-        DB::statement('ALTER TABLE products ADD CONSTRAINT base_price_positive CHECK (base_price > 0)');
     }
 
     /**

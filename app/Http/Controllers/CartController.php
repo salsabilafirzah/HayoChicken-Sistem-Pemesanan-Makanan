@@ -65,7 +65,7 @@ class CartController extends Controller
                 'product_id' => $validated['product_id'],
                 'quantity' => $validated['quantity'],
                 'price_snapshot' => $product->base_price,
-                'selected_extras_snapshot' => $validated['selected_extras_snapshot'],
+                'selected_extras_snapshot' => $validated['selected_extras_snapshot'] ?? [],
                 'note' => $validated['note'] ?? null,
                 'is_checked' => true,
             ]);

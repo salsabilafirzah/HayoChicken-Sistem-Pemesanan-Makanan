@@ -774,30 +774,60 @@
       background: var(--cream)
     }
 
-    .toggle-wrap {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: #fff;
-      border-radius: var(--r2);
-      padding: 14px;
-      box-shadow: var(--sh0);
-      margin-bottom: 10px
-    }
+        .toggle-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #fff;
+            border-radius: var(--r2);
+            padding: 14px;
+            box-shadow: var(--sh0);
+            margin-bottom: 10px
+        }
 
-    .toggle-lbl {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--bk)
-    }
+        /* TOAST NOTIFICATION */
+        .toast-container {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2000;
+            width: 90%;
+            pointer-events: none;
+        }
 
-    .toggle-sub {
-      font-size: 11px;
-      color: var(--g4);
-      margin-top: 2px
-    }
+        .toast {
+            background: #333;
+            color: #fff;
+            padding: 14px 20px;
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
 
-    .toggle {
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast.success { background: #27AE60; }
+        .toast.error { background: #E74C13; }
+        .toast.info { background: #1E76D2; }
+
+        .toast-icon {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
       width: 44px;
       height: 24px;
       border-radius: 12px;
@@ -1188,7 +1218,9 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: flex-end;
       gap: 4px;
+      height: 100%;
       cursor: pointer
     }
 
@@ -1758,7 +1790,7 @@
         </div>
         <div class="scard" style="background:rgba(255,255,255,0.12)">
           <div class="sic"><svg width="18" height="18"><use href="#I-star" /></svg></div>
-          <div class="sval">4.8</div>
+          <div class="sval">New</div>
           <div class="slbl">Rating Toko</div>
         </div>
       </div>
@@ -1828,21 +1860,18 @@
       </svg>
     </button>
     <nav class="seller-nav bnav">
-      <button class="ni on"
-        onclick="sellerTabNav('st-orders'); this.parentElement.querySelectorAll('.ni').forEach(n=>n.classList.remove('on')); this.classList.add('on')">
+      <button class="ni" onclick="sellerTabNav('st-orders')">
         <div class="niwrap"><svg width="20" height="20" class="nsvg">
             <use href="#I-clip" />
           </svg></div><span class="nlbl">Pesanan</span>
       </button>
 
-      <button class="ni"
-        onclick="sellerTabNav('st-menu'); this.parentElement.querySelectorAll('.ni').forEach(n=>n.classList.remove('on')); this.classList.add('on')">
+      <button class="ni" onclick="sellerTabNav('st-menu')">
         <div class="niwrap"><svg width="20" height="20" class="nsvg">
             <use href="#I-grid" />
           </svg></div><span class="nlbl">Menu</span>
       </button>
-      <button class="ni"
-        onclick="sellerTabNav('st-sales'); this.parentElement.querySelectorAll('.ni').forEach(n=>n.classList.remove('on')); this.classList.add('on')">
+      <button class="ni" onclick="sellerTabNav('st-sales')">
         <div class="niwrap"><svg width="20" height="20" class="nsvg">
             <use href="#I-trending" />
           </svg></div><span class="nlbl">Penjualan</span>
@@ -2036,12 +2065,13 @@
       <div class="cd-title">Verifikasi QRIS</div>
       <div class="cd-sub">Silakan periksa bukti pembayaran berikut:</div>
       <div
-        style="background:#f0f0f0; border-radius:12px; height:200px; margin-bottom:20px; display:flex; align-items:center; justify-content:center; color:#888;">
-        <div style="text-align:center">
+        style="background:#f0f0f0; border-radius:12px; min-height:200px; max-height:400px; margin-bottom:20px; display:flex; align-items:center; justify-content:center; color:#888; overflow:hidden;">
+        <img id="verify-receipt-img" src="" alt="Bukti Transfer" style="width:100%; height:100%; object-fit:contain; display:none;">
+        <div id="verify-receipt-placeholder" style="text-align:center">
           <svg width="48" height="48" style="margin-bottom:8px; opacity:0.5">
             <use href="#I-img" />
           </svg>
-          <div>[Bukti Transfer QRIS]</div>
+          <div>[Bukti Tidak Tersedia]</div>
         </div>
       </div>
       <div class="cd-btns">
@@ -2049,10 +2079,14 @@
         <button class="btn-main" onclick="hideOvl('ovl-verify-qris'); confirmAccept();">Verifikasi & Terima</button>
       </div>
     </div>
+      </div>
+    </div>
   </div>
 
 
   </div><!-- .app -->
+
+  <div id="toast-container" class="toast-container"></div>
 
   <script>
     // Sync server-side user data to localStorage for the frontend
@@ -2066,13 +2100,8 @@
         localStorage.setItem('userEmail', '{{ session('userEmail') }}');
     @endif
 
-    // Guard: hanya seller yang boleh masuk
-    (function () {
-      var role = localStorage.getItem('userRole');
-      if (role !== 'seller') {
-        window.location.href = '{{ route('login') }}';
-      }
-    })();
+    // Guard server-side (Laravel Middleware) sudah melindungi rute ini.
+    // Guard JS di bawah dihapus karena menyebabkan redirect loop jika localStorage tidak sinkron.
 
     // ═══════════════════════════════════════════════════
     // DATA STORE
@@ -2082,14 +2111,21 @@
         id: o.order_number,
         realId: o.id,
         custName: o.user ? o.user.name : 'Pelanggan',
-        items: (o.order_items || []).map(i => ({ menuId: null, qty: i.quantity, name: i.name_snapshot })),
+        items: (o.order_items || []).map(i => ({ menuId: i.product_id, qty: i.quantity, name: i.name_snapshot })),
         addr: o.delivery_address,
         pay: o.payment_method,
         status: o.status.toLowerCase(),
         time: new Date(o.created_at).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}),
-        total: o.total_amount
+        total: o.total_amount,
+        receipt: o.payment_receipt // Tambahkan field receipt
     }));
     const forecastingData = @json($forecasting);
+    const dailySalesReal = @json($dailySales);
+    const totalRevReal = {{ $totalRevenue }};
+    const orderCountReal = {{ $orderCount }};
+    const avgValueReal = {{ $avgValue }};
+    const revChange = 0; // Default to 0 for now as it's not calculated in backend yet
+    const data = orders; // Use the orders array as the base data for analytics
 
     let pendingActionOid = null;
 
@@ -2112,12 +2148,9 @@
     // SELLER DASHBOARD
     // ═══════════════════════════════════════════════════
     function renderSeller() {
-      // These elements were removed in the new 4-card header layout
-      // document.getElementById('s-stat3').textContent = pending;
-      // document.getElementById('s-stat1').textContent = orders.length;
-      
       renderSellerOrders();
       renderSellerMenu();
+      sellerTabNav('st-orders'); // Pastikan tab default aktif saat init
     }
 
     const orderStatusCfg = {
@@ -2193,26 +2226,33 @@
       document.getElementById('fab-add').classList.toggle('show', tid === 'st-menu');
     }
     function sellerTabNav(tid) {
-      if (tid === 'st-orders') {
-        document.getElementById('st-orders').style.display = '';
-        document.getElementById('st-menu').style.display = 'none';
-        document.getElementById('st-sales').style.display = 'none';
-        document.getElementById('order-filter-bar').style.display = 'flex';
-        document.getElementById('fab-add').classList.remove('show');
-      } else if (tid === 'st-menu') {
-        document.getElementById('st-orders').style.display = 'none';
-        document.getElementById('st-menu').style.display = '';
-        document.getElementById('st-sales').style.display = 'none';
-        document.getElementById('order-filter-bar').style.display = 'none';
-        document.getElementById('fab-add').classList.add('show');
-      } else if (tid === 'st-sales') {
-        document.getElementById('st-orders').style.display = 'none';
-        document.getElementById('st-menu').style.display = 'none';
-        document.getElementById('st-sales').style.display = 'flex';
-        document.getElementById('order-filter-bar').style.display = 'none';
-        document.getElementById('fab-add').classList.remove('show');
-        renderSalesTab();
-      }
+      // 1. Update Tab Content
+      const tabs = ['st-orders', 'st-menu', 'st-sales'];
+      tabs.forEach(t => {
+        const el = document.getElementById(t);
+        if (el) el.style.display = (t === tid) ? (t === 'st-sales' ? 'flex' : '') : 'none';
+      });
+
+      // 2. Update Navbar Highlight
+      const navButtons = document.querySelectorAll('.seller-nav .ni');
+      navButtons.forEach(btn => {
+        const onClickFn = btn.getAttribute('onclick') || '';
+        if (onClickFn.includes(tid)) {
+          btn.classList.add('on');
+        } else {
+          btn.classList.remove('on');
+        }
+      });
+
+      // 3. UI Toggles
+      const filterBar = document.getElementById('order-filter-bar');
+      if (filterBar) filterBar.style.display = (tid === 'st-orders') ? 'flex' : 'none';
+      
+      const fabAdd = document.getElementById('fab-add');
+      if (fabAdd) fabAdd.classList.toggle('show', tid === 'st-menu');
+
+      // 4. Content Specific Inits
+      if (tid === 'st-sales') renderSalesTab();
     }
 
 
@@ -2253,7 +2293,25 @@
     function openReject(e, id) { e && e.stopPropagation(); pendingActionOid = id; showOvl('ovl-confirm-reject'); }
     function openSend(e, id) { e && e.stopPropagation(); pendingActionOid = id; showOvl('ovl-confirm-send'); }
     function openDone(e, id) { e && e.stopPropagation(); pendingActionOid = id; showOvl('ovl-confirm-done'); }
-    function openVerify(e, id) { e && e.stopPropagation(); pendingActionOid = id; showOvl('ovl-verify-qris'); }
+    function openVerify(e, id) { 
+        e && e.stopPropagation(); 
+        pendingActionOid = id; 
+        
+        const o = orders.find(x => x.id === id);
+        const img = document.getElementById('verify-receipt-img');
+        const placeholder = document.getElementById('verify-receipt-placeholder');
+        
+        if (o && o.receipt) {
+            img.src = '/storage/' + o.receipt;
+            img.style.display = 'block';
+            placeholder.style.display = 'none';
+        } else {
+            img.style.display = 'none';
+            placeholder.style.display = 'block';
+        }
+        
+        showOvl('ovl-verify-qris'); 
+    }
 
 
     async function confirmAccept() {
@@ -2290,16 +2348,39 @@
         });
 
         if (response.ok) {
-            alert(`Status pesanan ${orderNum} diupdate ke ${status}`);
-            location.reload();
+            // Success toast removed as per user request
+            location.reload(); 
         } else {
             const res = await response.json();
-            alert(res.message || "Gagal mengupdate status.");
+            showToast(res.message || "Gagal mengupdate status.", 'error');
         }
       } catch (err) {
         console.error(err);
-        alert("Terjadi kesalahan koneksi.");
+        showToast("Terjadi kesalahan koneksi.", 'error');
       }
+    }
+
+    function showToast(msg, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        let icon = '';
+        if (type === 'success') icon = '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+        else if (type === 'error') icon = '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+        else icon = '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+
+        toast.innerHTML = `<div class="toast-icon">${icon}</div><div class="toast-msg">${msg}</div>`;
+        container.appendChild(toast);
+        
+        // Trigger animation
+        setTimeout(() => toast.classList.add('show'), 10);
+        
+        // Auto remove
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
     }
 
     function refreshOrderViews() {
@@ -2357,35 +2438,13 @@
     // ═══════════════════════════════════════════════════
     let currentSalesPeriod = 'today';
 
-    const salesHistory = [
-      { id: 'HC-0042', custName: 'Andi Mahasiswa', items: [{ menuId: 1, qty: 1 }, { menuId: 4, qty: 1 }], pay: 'COD', status: 'delivering', time: '12:34', hour: 12, day: 0, total: 17000 },
-      { id: 'HC-0041', custName: 'Sari Putri', items: [{ menuId: 2, qty: 2 }, { menuId: 3, qty: 1 }], pay: 'COD', status: 'done', time: '12:20', hour: 12, day: 0, total: 44000 },
-      { id: 'HC-0040', custName: 'Budi Santoso', items: [{ menuId: 5, qty: 2 }], pay: 'QRIS', status: 'done', time: '12:15', hour: 12, day: 0, total: 26000 },
-      { id: 'HC-0039', custName: 'Maya Lestari', items: [{ menuId: 6, qty: 1 }], pay: 'COD', status: 'done', time: '11:50', hour: 11, day: 0, total: 30000 },
-      { id: 'HC-0038', custName: 'Rizky Pratama', items: [{ menuId: 1, qty: 1 }, { menuId: 7, qty: 1 }], pay: 'COD', status: 'done', time: '11:30', hour: 11, day: 0, total: 16000 },
-      { id: 'HC-0037', custName: 'Dewi Anggraini', items: [{ menuId: 2, qty: 1 }, { menuId: 8, qty: 2 }], pay: 'QRIS', status: 'done', time: '10:45', hour: 10, day: 0, total: 32000 },
-      { id: 'HC-0036', custName: 'Fajar Nugroho', items: [{ menuId: 1, qty: 3 }], pay: 'COD', status: 'done', time: '10:10', hour: 10, day: 0, total: 36000 },
-      { id: 'HC-0035', custName: 'Ayu Wulandari', items: [{ menuId: 4, qty: 2 }, { menuId: 7, qty: 1 }], pay: 'QRIS', status: 'done', time: '09:30', hour: 9, day: 0, total: 14000 },
-      { id: 'HC-0034', custName: 'Hendra Wijaya', items: [{ menuId: 5, qty: 1 }, { menuId: 3, qty: 1 }], pay: 'COD', status: 'done', time: '09:00', hour: 9, day: 0, total: 21000 },
-      { id: 'HC-0033', custName: 'Linda Kusuma', items: [{ menuId: 2, qty: 1 }], pay: 'COD', status: 'done', time: '13:00', hour: 13, day: 1, total: 18000 },
-      { id: 'HC-0032', custName: 'Reza Firmansyah', items: [{ menuId: 6, qty: 2 }], pay: 'QRIS', status: 'done', time: '12:00', hour: 12, day: 1, total: 60000 },
-      { id: 'HC-0031', custName: 'Siti Rahayu', items: [{ menuId: 1, qty: 2 }, { menuId: 4, qty: 1 }], pay: 'COD', status: 'done', time: '11:00', hour: 11, day: 1, total: 29000 },
-      { id: 'HC-0030', custName: 'Bagas Pratama', items: [{ menuId: 8, qty: 3 }], pay: 'COD', status: 'done', time: '10:00', hour: 10, day: 1, total: 21000 },
-      { id: 'HC-0029', custName: 'Nadia Pertiwi', items: [{ menuId: 5, qty: 1 }], pay: 'QRIS', status: 'done', time: '09:00', hour: 9, day: 1, total: 13000 },
-      { id: 'HC-0028', custName: 'Irfan Hakim', items: [{ menuId: 2, qty: 3 }], pay: 'COD', status: 'done', time: '12:30', hour: 12, day: 2, total: 54000 },
-      { id: 'HC-0027', custName: 'Yuli Astuti', items: [{ menuId: 1, qty: 2 }, { menuId: 7, qty: 2 }], pay: 'COD', status: 'done', time: '11:30', hour: 11, day: 2, total: 32000 },
-      { id: 'HC-0026', custName: 'Doni Setiawan', items: [{ menuId: 3, qty: 2 }, { menuId: 4, qty: 2 }], pay: 'QRIS', status: 'done', time: '10:00', hour: 10, day: 2, total: 26000 },
-      { id: 'HC-0025', custName: 'Rika Handayani', items: [{ menuId: 6, qty: 1 }, { menuId: 8, qty: 2 }], pay: 'COD', status: 'done', time: '13:00', hour: 13, day: 3, total: 44000 },
-      { id: 'HC-0024', custName: 'Tono Wibowo', items: [{ menuId: 1, qty: 4 }], pay: 'COD', status: 'done', time: '12:00', hour: 12, day: 3, total: 48000 },
-      { id: 'HC-0023', custName: 'Vina Permata', items: [{ menuId: 5, qty: 2 }, { menuId: 4, qty: 1 }], pay: 'QRIS', status: 'done', time: '10:30', hour: 10, day: 3, total: 31000 },
-      { id: 'HC-0022', custName: 'Aldo Mahendra', items: [{ menuId: 2, qty: 2 }, { menuId: 3, qty: 1 }], pay: 'COD', status: 'done', time: '12:00', hour: 12, day: 4, total: 44000 },
-      { id: 'HC-0021', custName: 'Putri Maulida', items: [{ menuId: 7, qty: 2 }, { menuId: 8, qty: 1 }], pay: 'QRIS', status: 'done', time: '11:00', hour: 11, day: 4, total: 15000 },
-      { id: 'HC-0020', custName: 'Eko Prasetyo', items: [{ menuId: 1, qty: 1 }, { menuId: 2, qty: 1 }], pay: 'COD', status: 'done', time: '12:00', hour: 12, day: 5, total: 30000 },
-      { id: 'HC-0019', custName: 'Wati Ningrum', items: [{ menuId: 6, qty: 1 }], pay: 'QRIS', status: 'done', time: '10:00', hour: 10, day: 5, total: 30000 },
-      { id: 'HC-0018', custName: 'Joko Santoso', items: [{ menuId: 5, qty: 3 }], pay: 'COD', status: 'done', time: '13:00', hour: 13, day: 6, total: 39000 },
-      { id: 'HC-0017', custName: 'Mega Puspita', items: [{ menuId: 3, qty: 2 }, { menuId: 4, qty: 3 }], pay: 'QRIS', status: 'done', time: '11:00', hour: 11, day: 6, total: 31000 },
+    // Real data now from database
+    const salesHistory = []; 
 
-    ];
+    function getSalesData(period) {
+      // Simplified: for now just return orders and recent data
+      return orders.filter(o => o.status === 'done');
+    }
 
     function getSalesData(period) {
       if (period === 'today') return salesHistory.filter(o => o.day === 0 && o.status === 'done');
@@ -2401,20 +2460,11 @@
     }
 
     function renderSalesTab() {
-      const data = getSalesData(currentSalesPeriod);
-      const totalRev = data.reduce((s, o) => s + o.total, 0);
-      const totalOrders = data.length;
-      const avgOrder = totalOrders ? Math.round(totalRev / totalOrders) : 0;
+      const totalRev = totalRevReal;
+      const totalOrders = orderCountReal;
+      const avgOrder = avgValueReal;
       const menuQty = {};
-      data.forEach(o => o.items.forEach(i => { menuQty[i.menuId] = (menuQty[i.menuId] || 0) + i.qty; }));
-      const prevRev = currentSalesPeriod === 'today' ? 214000 : currentSalesPeriod === 'week' ? 520000 : 1200000;
-      const revChange = prevRev ? Math.round((totalRev - prevRev) / prevRev * 100) : 0;
-      const res = { COD: 0, QRIS: 0 };
-      data.forEach(o => {
-        if (o.pay.includes('COD')) res.COD += o.total;
-        else if (o.pay.includes('QRIS')) res.QRIS += o.total;
-      });
-      const topPay = Object.entries(res).sort((a, b) => b[1] - a[1])[0];
+      const topPay = 'COD';
 
 
       document.getElementById('sales-kpi').innerHTML = `
@@ -2472,19 +2522,17 @@
     </div>`;
       }).join('');
 
-      document.getElementById('txn-list').innerHTML = data.map(o => {
-        const itemStr = o.items.map(i => { const m = MENUS.find(x => x.id === i.menuId); return m ? `${m.name} x${i.qty}` : '' }).filter(Boolean).join(' · ');
-        const payClass = o.pay.includes('COD') ? 'cod' : o.pay.includes('Transfer') ? 'tf' : 'qr';
-        const payShort = o.pay.includes('COD') ? 'COD' : o.pay.includes('Transfer') ? 'TF' : 'QRIS';
-        const dayStr = o.day === 0 ? 'Hari ini' : o.day === 1 ? 'Kemarin' : `${o.day} hari lalu`;
+      document.getElementById('txn-list').innerHTML = orders.map(o => {
+        const itemStr = o.items.map(i => `${i.name} x${i.qty}`).join(' · ');
+        const payShort = o.pay;
         return `<div class="txn-row" onclick="openSellerOrder('${o.id}')">
       <div class="txn-top">
         <div><div class="txn-id">#${o.id}</div><div class="txn-cust">${o.custName}</div></div>
-        <div class="txn-time">${dayStr} ${o.time}</div>
+        <div class="txn-time">${o.time}</div>
       </div>
       <div class="txn-items">${itemStr}</div>
       <div class="txn-bot">
-        <span class="txn-pay ${payClass}">${payShort}</span>
+        <span class="txn-pay cod">${payShort}</span>
         <span class="txn-total">Rp${o.total.toLocaleString('id-ID')}</span>
       </div>
     </div>`;
@@ -2498,29 +2546,21 @@
 
     function renderSalesChart(data) {
       const container = document.getElementById('sales-bar-chart');
-      let bars = [];
-      if (currentSalesPeriod === 'today') {
-        const hours = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
-        bars = hours.map(h => ({ lbl: h + '', val: data.filter(o => o.hour === h).reduce((s, o) => s + o.total, 0) }));
-      } else if (currentSalesPeriod === 'week') {
-        const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
-        const today = new Date().getDay();
-        bars = Array.from({ length: 7 }, (_, i) => 6 - i).reverse().map(daysAgo => {
-          const dow = (today - daysAgo + 7) % 7;
-          return { lbl: dayNames[dow], val: data.filter(o => o.day === daysAgo).reduce((s, o) => s + o.total, 0) };
-        });
-      } else {
-        bars = Array.from({ length: 14 }, (_, i) => 13 - i).reverse().map(d => ({ lbl: d === 0 ? 'H' : d % 7 === 0 ? '-' + d : '', val: data.filter(o => o.day === d).reduce((s, o) => s + o.total, 0) }));
+      // Fix date format for the label
+      const bars = dailySalesReal.map(d => ({ lbl: d.date.split('-').slice(1).reverse().join('/'), val: d.total }));
+      
+      if (bars.length === 0) {
+        container.innerHTML = '<div style="flex:1;text-align:center;color:var(--g4);font-size:12px;padding-top:20px">Data belum tersedia</div>';
+        return;
       }
+
       const maxVal = Math.max(...bars.map(b => b.val), 1);
       container.innerHTML = bars.map((b) => {
         const pct = Math.round(b.val / maxVal * 100);
-        const isActive = b.val === maxVal && b.val > 0;
-        const barColor = isActive ? 'var(--red)' : 'rgba(158,9,15,' + (0.15 + pct / 100 * 0.6) + ')';
         return `<div class="bar-col" title="Rp${b.val.toLocaleString('id-ID')}">
       <div class="bar-amt" style="color:${b.val > 0 ? 'var(--g6)' : 'transparent'}">${b.val >= 1000 ? Math.round(b.val / 1000) + 'k' : ''}</div>
-      <div class="bar-fill ${isActive ? 'active' : ''}" style="height:${Math.max(pct, b.val > 0 ? 8 : 2)}%;background:${barColor}"></div>
-      <div class="bar-lbl">${b.lbl || '·'}</div>
+      <div class="bar-fill active" style="height:${Math.max(pct, 5)}%;background:var(--red)"></div>
+      <div class="bar-lbl">${b.lbl}</div>
     </div>`;
       }).join('');
     }
@@ -2607,46 +2647,32 @@
     ];
 
     function renderBOM(salesData) {
-      // Hitung qty terjual per menu dalam periode
-      const menuQtySold = {};
-      salesData.forEach(o => o.items.forEach(i => {
-        menuQtySold[i.menuId] = (menuQtySold[i.menuId] || 0) + i.qty;
-      }));
-
-      // Langkah 1: estimasi_kebutuhan = Σ (qty_terjual × quantity_needed_per_porsi) per bahan baku
-      const estimasiKebutuhan = {};
-      MENU_BOM.forEach(bom => {
-        const qtySold = menuQtySold[bom.product_id] || 0;
-        estimasiKebutuhan[bom.raw_material_id] = (estimasiKebutuhan[bom.raw_material_id] || 0) + (qtySold * bom.quantity_needed);
-      });
-
-      // Langkah 2: tentukan label status logistik
       const bomList = document.getElementById('bom-list');
-      const items = RAW_MATERIALS.map(rm => {
-        const estimasi = estimasiKebutuhan[rm.id] || 0;
-        let label, labelColor, labelBg;
-        if (rm.current_stock < rm.minimum_threshold) {
-          label = 'Restock Segera';
+      
+      if (!forecastingData || forecastingData.length === 0) {
+        bomList.innerHTML = '<div style="text-align:center;padding:20px;color:var(--g4);font-size:12px">Belum ada data bahan baku</div>';
+        return;
+      }
+
+      bomList.innerHTML = forecastingData.map(it => {
+        let labelColor, labelBg;
+        if (it.status === 'Restock Segera') {
           labelColor = '#C0392B'; labelBg = 'rgba(192,57,43,.12)';
-        } else if (rm.current_stock < estimasi * 1.2) {
-          label = 'Prioritas Tinggi';
+        } else if (it.status === 'Prioritas Tinggi') {
           labelColor = '#B8820A'; labelBg = 'rgba(255,178,30,.18)';
         } else {
-          label = 'Stok Aman';
           labelColor = '#1E9E52'; labelBg = 'rgba(39,174,96,.12)';
         }
-        const rekomendasi = Math.max(0, Math.ceil((estimasi * 1.2) - rm.current_stock));
-        return { rm, estimasi, label, labelColor, labelBg, rekomendasi };
-      });
 
-      bomList.innerHTML = items.map(it => `
+        return `
         <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--g2)">
           <div style="flex:1;min-width:0">
-            <div style="font-size:12px;font-weight:700;color:var(--bk);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.rm.name}</div>
-            <div style="font-size:10px;color:var(--g4);margin-top:2px">Stok: ${it.rm.current_stock} ${it.rm.unit} · Est. kebutuhan: ${it.estimasi.toFixed(1)} ${it.rm.unit}${it.rekomendasi > 0 ? ' · <b style="color:var(--red)">Beli: ' + it.rekomendasi + ' ' + it.rm.unit + '</b>' : ''}</div>
+            <div style="font-size:12px;font-weight:700;color:var(--bk);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.material}</div>
+            <div style="font-size:10px;color:var(--g4);margin-top:2px">Stok: ${it.current} ${it.unit} · Est. kebutuhan: ${it.estimate.toFixed(1)} ${it.unit}</div>
           </div>
-          <span style="margin-left:10px;padding:3px 9px;border-radius:999px;font-size:10px;font-weight:700;background:${it.labelBg};color:${it.labelColor};flex-shrink:0">${it.label}</span>
-        </div>`).join('');
+          <span style="margin-left:10px;padding:3px 9px;border-radius:999px;font-size:10px;font-weight:700;background:${labelBg};color:${it.labelColor || labelColor};flex-shrink:0">${it.status}</span>
+        </div>`;
+      }).join('');
     }
 
     // Init

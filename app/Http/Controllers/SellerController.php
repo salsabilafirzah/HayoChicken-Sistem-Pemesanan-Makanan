@@ -79,10 +79,18 @@ class SellerController extends Controller
 
         $allProducts = Product::orderBy('name')->get();
 
+        // 5. Daily Sales for Chart (Last 7 Days)
+        $dailySales = Order::where('status', 'DONE')
+            ->where('created_at', '>=', now()->subDays(7))
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('SUM(total_amount) as total'))
+            ->groupBy('date')
+            ->orderBy('date', 'ASC')
+            ->get();
+
         return view('seller.dashboard', compact(
             'totalRevenue', 'orderCount', 'avgValue', 
             'topProducts', 'recentOrders', 'forecasting', 'allProducts',
-            'todayOrderCount', 'newOrderCount'
+            'todayOrderCount', 'newOrderCount', 'dailySales'
         ));
     }
 }

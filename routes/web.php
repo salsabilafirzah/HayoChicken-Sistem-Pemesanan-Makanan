@@ -5,6 +5,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BuyerController;
 use App\Http\Controllers\SellerController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\FavoriteController;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,8 +45,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/checkout',     [BuyerController::class, 'checkout'])->name('checkout');
     Route::post('/checkout',    [OrderController::class, 'checkout'])->name('order.checkout');
 
-    Route::get('/pesanan/berhasil', [BuyerController::class, 'orderSuccess'])->name('order.success');
-    Route::get('/pesanan/status',   [BuyerController::class, 'orderStatus'])->name('order.status');
+    Route::get('/pesanan/berhasil/{order}', [BuyerController::class, 'orderSuccess'])->name('order.success');
+    Route::get('/pesanan/status/{order}',   [BuyerController::class, 'orderStatus'])->name('order.status');
     Route::get('/pesanan/riwayat',  [BuyerController::class, 'orderHistory'])->name('order.history');
     Route::get('/pesanan/aktif',    [BuyerController::class, 'orderActive'])->name('order.active');
 
@@ -52,6 +54,20 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/alamat',       [BuyerController::class, 'savedAddresses'])->name('address.saved');
     Route::get('/alamat/tambah',[BuyerController::class, 'addAddress'])->name('address.add');
+
+    // ─── Cart (Web Session Route) ────────────────────────────────────────────
+    Route::get('/web/cart',                 [CartController::class, 'index'])->name('web.cart.index');
+    Route::post('/web/cart',                [CartController::class, 'store'])->name('web.cart.store');
+    Route::patch('/web/cart/{cartItem}',    [CartController::class, 'update'])->name('web.cart.update');
+    Route::delete('/web/cart/{cartItem}',   [CartController::class, 'destroy'])->name('web.cart.destroy');
+    Route::patch('/web/cart/{cartItem}/toggle-check', [CartController::class, 'toggleCheck'])->name('web.cart.toggle');
+
+    // ─── Favorites (Web Session Route) ───────────────────────────────────────
+    Route::get('/web/favorites',            [FavoriteController::class, 'index'])->name('web.fav.index');
+    Route::post('/web/favorites/toggle',    [FavoriteController::class, 'toggle'])->name('web.fav.toggle');
+
+    // ─── Orders (Web Session Route) ──────────────────────────────────────────
+    Route::get('/web/orders',               [OrderController::class, 'index'])->name('web.orders.index');
 });
 
 // ─── Seller (Protected) ───────────────────────────────────────────────────────

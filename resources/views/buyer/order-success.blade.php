@@ -92,32 +92,25 @@
         <div class="info-card">
             <div class="info-row">
                 <span class="info-label">ID Pesanan</span>
-                <span class="info-val" id="order-id">#HC-0001</span>
+                <span class="info-val" id="order-id">#{{ $order->order_number }}</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Estimasi</span>
-                <span class="info-val accent" id="order-est">15–20 menit</span>
+                <span class="info-val accent" id="order-est">15-20 menit</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Total</span>
-                <span class="info-val" id="order-total">Rp0</span>
+                <span class="info-val" id="order-total">Rp{{ number_format($order->total_amount, 0, ',', '.') }}</span>
             </div>
         </div>
 
-        <button class="btn-primary" onclick="window.location.href='{{ route('order.status') }}'">Pantau Pesanan</button>
+        <button class="btn-primary" onclick="window.location.href='{{ route('order.status', $order->id) }}'">Pantau Pesanan</button>
         <button class="btn-text" onclick="window.location.href='{{ route('home') }}'">Kembali ke Beranda</button>
     </div>
 </div>
 
 <script>
-function rp(n) { return 'Rp' + n.toLocaleString('id-ID'); }
-
-const order = JSON.parse(localStorage.getItem('hc_last_order') || '{}');
-if (order.id) {
-    document.getElementById('order-id').textContent = '#' + order.id;
-    document.getElementById('order-est').textContent = order.estimasi || '15–20 menit';
-    document.getElementById('order-total').textContent = rp(order.total || 0);
-}
+    // Data loaded via Blade
 </script>
 </body>
 </html>

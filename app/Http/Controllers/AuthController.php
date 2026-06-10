@@ -52,14 +52,16 @@ class AuthController extends Controller
         // Jika request dari web browser (bukan API), gunakan session login standar Laravel
         if (!$request->wantsJson()) {
             Auth::guard('web')->login($user, true);
-            $request->session()->regenerate();
-            $request->session()->put('logged_in_at', now()->toDateTimeString());
-            $request->session()->save();
+            if ($request->hasSession()) {
+                $request->session()->regenerate();
+                $request->session()->put('logged_in_at', now()->toDateTimeString());
+                $request->session()->save();
+            }
 
-            // Debug header (opsional tapi membantu)
-            return $user->role === 'SELLER' 
-                ? redirect()->intended(route('seller.dashboard'))
-                : redirect()->intended(route('home'));
+            if ($user->role === 'SELLER') {
+                return redirect()->route('seller.dashboard');
+            }
+            return redirect()->route('home');
         }
 
         $token = \Tymon\JWTAuth\Facades\JWTAuth::fromUser($user);
@@ -87,9 +89,11 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
+        \Illuminate\Support\Facades\Log::info('Register request received', ['json' => $request->wantsJson(), 'data' => $request->except(['password', 'password_confirmation'])]);
+        
         $request->validate([
             'name'     => 'required|string|max:255',
-            'phone'    => 'required|string|regex:/^\+62[0-9]{8,13}$/',
+            'phone'    => ['required', 'string', 'regex:/^[0-9+]{10,15}$/'],
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|min:8|confirmed',
         ]);
@@ -101,6 +105,14 @@ class AuthController extends Controller
             'password_hash' => Hash::make($request->password),
             'role' => 'CUSTOMER',
         ]);
+
+        if (!$request->wantsJson()) {
+            Auth::guard('web')->login($user);
+            if ($request->hasSession()) {
+                $request->session()->regenerate();
+            }
+            return redirect()->route('home')->with('success', 'Registrasi berhasil! Selamat datang.');
+        }
 
         $token = \Tymon\JWTAuth\Facades\JWTAuth::fromUser($user);
 
@@ -220,8 +232,8 @@ class AuthController extends Controller
         $user = Auth::user();
 
         $request->validate([
-            'name' => 'required|string|max:255',
-            'phone' => 'nullable|string|regex:/^\+62[0-9]{8,13}$/',
+            'name'  => 'required|string|max:255',
+            'phone' => ['required', 'string', 'regex:/^[0-9+]{10,15}$/'],
         ]);
 
         $user->name = $request->name;

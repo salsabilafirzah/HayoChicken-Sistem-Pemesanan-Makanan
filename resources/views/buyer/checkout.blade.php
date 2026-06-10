@@ -226,34 +226,33 @@
             margin-bottom: 14px;
         }
 
-        .qris-placeholder {
-            width: 160px;
-            height: 160px;
+        .qris-image {
+            width: 280px;
+            height: auto;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border: 4px solid white;
+            margin-bottom: 12px;
+        }
+
+        .btn-download-qris {
             background: #F5EFE6;
-            border-radius: 12px;
-            border: 2px dashed #BBAA99;
+            color: #9B1A1A;
+            border: 1.5px solid #9B1A1A;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-decoration: none;
             display: flex;
-            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 6px;
+            gap: 6px;
+            transition: all 0.2s;
+            margin-bottom: 12px;
         }
 
-        .qris-placeholder svg {
-            width: 48px;
-            height: 48px;
-            stroke: #BBAA99;
-            fill: none;
-            stroke-width: 1.5;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-
-        .qris-placeholder span {
-            font-size: 0.7rem;
-            color: #BBAA99;
-            font-weight: 600;
+        .btn-download-qris:active {
+            transform: scale(0.95);
         }
 
         .qris-nominal {
@@ -494,17 +493,11 @@
                         diverifikasi manual oleh penjual.
                     </div>
                     <div class="qris-code-wrap">
-                        <div class="qris-placeholder">
-                            <svg viewBox="0 0 24 24">
-                                <rect x="2" y="2" width="8" height="8" />
-                                <rect x="14" y="2" width="8" height="8" />
-                                <rect x="2" y="14" width="8" height="8" />
-                                <rect x="14" y="14" width="4" height="4" />
-                                <rect x="20" y="14" width="2" height="2" />
-                                <rect x="14" y="20" width="6" height="2" />
-                            </svg>
-                            <span>QRIS TOKO</span>
-                        </div>
+                        <img src="{{ asset('img/qris_toko.jpg') }}" alt="QRIS Hayo Chicken" class="qris-image">
+                        <a href="{{ asset('img/qris_toko.jpg') }}" download="QRIS_HayoChicken.jpg" class="btn-download-qris">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            Simpan QRIS ke Galeri
+                        </a>
                         <div class="qris-nominal">Total: <span id="qris-nominal-val">Rp0</span></div>
                     </div>
 
@@ -549,19 +542,16 @@
     <script>
         function rp(n) { return 'Rp' + n.toLocaleString('id-ID'); }
 
-        let payMethod = 'cod';
-
-        let uploadedFile = null;
+        let payMethod = 'COD';
+        let uploadedFileObject = null;
 
         function selectPay(m) {
             payMethod = m;
             document.getElementById('radio-cod').classList.toggle('selected', m === 'cod');
             document.getElementById('radio-qris').classList.toggle('selected', m === 'qris');
             document.getElementById('qris-section').classList.toggle('show', m === 'qris');
-            // reset upload error when switching
             document.getElementById('err-upload').style.display = 'none';
         }
-
 
         function handleUpload(input) {
             const file = input.files[0];
@@ -581,14 +571,17 @@
                 input.value = '';
                 return;
             }
-            uploadedFile = file.name;
+            uploadedFileObject = file;
             document.getElementById('err-upload').style.display = 'none';
             document.getElementById('upload-preview').classList.add('show');
             document.getElementById('upload-filename').textContent = file.name;
             document.getElementById('upload-label').style.display = 'none';
         }
 
-        // Load cart summary
+        // Load cart summary FROM localStorage (since the user likely came from home/cart)
+        // BUT we should double check if the session-cart is available.
+        // Actually, the previous step made it so that cart is dynamic. 
+        // We'll use the one from localStorage for UI but the backend will use the session to be safe.
         const cart = JSON.parse(localStorage.getItem('hc_cart') || '{}');
         const count = Object.values(cart).reduce((s, i) => s + i.qty, 0);
         const total = Object.values(cart).reduce((s, i) => s + (i.basePrice + i.addExtra) * i.qty, 0);
@@ -598,19 +591,9 @@
         document.getElementById('total-val').textContent = rp(total);
         document.getElementById('qris-nominal-val').textContent = rp(total);
 
-        // Generate order number format HC-YYYYMMDD-XXXX
-        function genOrderId() {
-            const now = new Date();
-            const y = now.getFullYear();
-            const m = String(now.getMonth() + 1).padStart(2, '0');
-            const d = String(now.getDate()).padStart(2, '0');
-            const orders = JSON.parse(localStorage.getItem('hc_orders') || '[]');
-            const seq = String(orders.length + 1).padStart(4, '0');
-            return `HC-${y}${m}${d}-${seq}`;
-        }
-
-        function konfirmasi() {
+        async function konfirmasi() {
             const alamat = document.getElementById('alamat').value.trim();
+            const patokan = document.getElementById('patokan').value.trim();
             const errEl = document.getElementById('err-alamat');
             const inp = document.getElementById('alamat');
 
@@ -623,40 +606,50 @@
             errEl.style.display = 'none';
             inp.classList.remove('error');
 
-            // Validasi bukti upload untuk QRIS
-            if (payMethod === 'qris' && !uploadedFile) {
+            if (payMethod === 'qris' && !uploadedFileObject) {
                 document.getElementById('err-upload').textContent = 'Bukti transfer wajib diunggah untuk pembayaran QRIS';
                 document.getElementById('err-upload').style.display = 'block';
                 document.getElementById('qris-section').scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return;
             }
 
-            const orderId = genOrderId();
+            const btn = document.querySelector('.btn-confirm');
+            const origText = btn.textContent;
+            btn.textContent = 'Memproses...';
+            btn.disabled = true;
 
-            // Status awal: QRIS = pending_verification, lainnya = new
-            const initialStatus = payMethod === 'qris' ? 'pending_verification' : 'new';
+            const formData = new FormData();
+            formData.append('delivery_address', alamat);
+            formData.append('delivery_note', patokan);
+            formData.append('payment_method', payMethod === 'qris' ? 'QRIS_MANUAL' : 'COD');
+            if (uploadedFileObject) {
+                formData.append('payment_receipt', uploadedFileObject);
+            }
 
-            const order = {
-                id: orderId,
-                alamat: alamat,
-                patokan: document.getElementById('patokan').value.trim(),
-                pay: payMethod,
-                paymentReceipt: uploadedFile || null,
-                items: JSON.parse(localStorage.getItem('hc_cart') || '{}'),
-                total: total,
-                count: count,
-                estimasi: '15–20 menit',
-                status: initialStatus,
-                time: Date.now()
-            };
+            try {
+                const response = await fetch('{{ route('order.checkout') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
 
-            const orders = JSON.parse(localStorage.getItem('hc_orders') || '[]');
-            orders.push(order);
-            localStorage.setItem('hc_orders', JSON.stringify(orders));
-            localStorage.setItem('hc_last_order', JSON.stringify(order));
-            localStorage.removeItem('hc_cart');
-
-            window.location.href = '{{ route('order.success') }}';
+                const res = await response.json();
+                if (res.success) {
+                    localStorage.removeItem('hc_cart');
+                    window.location.href = '{{ route('order.success', ':id') }}'.replace(':id', res.order_id);
+                } else {
+                    alert("Checkout Gagal: " + (res.message || "Terjadi kesalahan."));
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Kesalahan koneksi saat checkout.");
+            } finally {
+                btn.textContent = origText;
+                btn.disabled = false;
+            }
         }
     </script>
 </body>

@@ -47,7 +47,7 @@ $reg = request('POST', '/auth/register', [
 if ($reg['status'] === 201) {
     echo "✅ Register Berhasil (201)\n";
 } else {
-    echo "❌ Register Gagal (" . $reg['status'] . "): " . json_encode($reg['data']) . "\n";
+    echo "❌ Register Gagal (" . $reg['status'] . "): " . json_encode($reg['data'], JSON_PRETTY_PRINT) . "\n";
     exit(1);
 }
 

@@ -22,7 +22,7 @@ Route::prefix('v1')->group(function () {
     Route::get('products/{id}',  [ProductController::class, 'show']);
     Route::get('categories',     [CategoryController::class, 'index']);
 
-    Route::middleware('auth:api')->group(function () {
+    Route::middleware('auth:api,web')->group(function () {
 
         Route::post('auth/logout', [AuthController::class, 'logout']);
 

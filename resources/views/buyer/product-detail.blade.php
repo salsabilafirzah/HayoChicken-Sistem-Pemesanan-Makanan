@@ -407,7 +407,7 @@
                                 <polyline points="20 6 9 17 4 12" />
                             </svg></div>
                         <span class="t-label">{{ $extra->name }}</span>
-                        <span class="t-price">+{{ rp($extra->additional_price) }}</span>
+                        <span class="t-price">+Rp{{ number_format($extra->additional_price, 0, ',', '.') }}</span>
                     </div>
                     @empty
                     <div class="tambahan-item">
@@ -427,17 +427,17 @@
     </div>
 
     <script>
-        const item = @json([
+        const item = {!! json_encode([
             'id' => $product->id,
             'name' => $product->name,
             'desc' => $product->description,
             'price' => $product->base_price,
             'img' => $product->image_url ?: '/assets/fried_chicken.png'
-        ]);
+        ]) !!};
 
-        const addons = @json($product->productExtras->map(function($e) {
+        const addons = {!! json_encode($product->productExtras->map(function($e) {
             return ['id' => $e->id, 'name' => $e->name, 'price' => $e->additional_price];
-        }));
+        })) !!};
 
         const itemId = item.id;
 
@@ -450,6 +450,7 @@
         async function apiFetch(url, method = 'GET', body = null) {
             const options = {
                 method,
+                credentials: 'same-origin', // WAJIB: kirim session cookie
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
@@ -461,8 +462,13 @@
             try {
                 const response = await fetch(url, options);
                 if (response.status === 401) {
-                    window.location.href = '{{ route('login') }}';
+                    console.warn("API 401: Unauthorized.");
                     return null;
+                }
+                if (!response.ok) {
+                    const data = await response.json().catch(() => ({}));
+                    console.warn("API Error:", response.status, data.message);
+                    return data;
                 }
                 return await response.json();
             } catch (err) {
@@ -476,7 +482,7 @@
         let isFav = false;
 
         async function loadInitialState() {
-            const res = await apiFetch('/api/v1/favorites');
+            const res = await apiFetch('/web/favorites');
             if (res && res.success) {
                 isFav = res.data.some(f => f.product_id == itemId);
                 document.getElementById('fav-btn').classList.toggle('fav-active', isFav);
@@ -508,34 +514,38 @@
         }
 
         async function toggleFav() {
-            const res = await apiFetch('/api/v1/favorites/toggle', 'POST', {
+            const res = await apiFetch('/web/favorites/toggle', 'POST', {
                 product_id: itemId
             });
             if (res && res.success) {
                 isFav = !isFav;
                 document.getElementById('fav-btn').classList.toggle('fav-active', isFav);
+                
+                // Sesuai permintaan user: langsung buka page favorit
+                window.location.href = '{{ route('home') }}?v=fav';
             }
         }
 
         async function addToCartAndGo() {
-            const selectedExtras = addons.filter((a, i) => addChecked[i]).map(a => a.id);
+            const selectedExtras = addons.filter((a, i) => addChecked[i]).map(a => a.name); // Simpan nama extras, bukan ID (sesuai logika controller)
             const notes = document.getElementById('catatan').value;
 
-            const res = await apiFetch('/api/v1/cart', 'POST', {
+            const res = await apiFetch('/web/cart', 'POST', {
                 product_id: itemId,
                 quantity: qty,
-                extras: selectedExtras,
+                selected_extras_snapshot: selectedExtras,
                 note: notes
             });
 
             if (res && res.success) {
-                window.location.href = '{{ route('cart') }}';
+                window.location.href = '{{ route('home') }}?v=cart'; // Arahkan ke cart view di home
             } else {
-                alert(res.message || "Gagal menambah ke keranjang.");
+                alert(res ? (res.message || "Gagal menambah ke keranjang.") : "Gagal menambah ke keranjang. Pastikan sudah login.");
             }
         }
 
         loadInitialState();
+        updateBtn(); // Tambahkan ini agar harga awal dirender
     </script>
 </body>
 

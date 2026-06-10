@@ -17,13 +17,7 @@ class RawMaterial extends Model
         'minimum_threshold',
     ];
 
-    /**
-     * Get the unit (aliased for compatibility). [Bug #6]
-     */
-    public function getUnitAttribute()
-    {
-        return $this->unit; // Kolom di database ternyata 'unit', tapi accessor ini menjaga fleksibilitas.
-    }
+
 
     /**
      * Get the BOM items for the raw material.

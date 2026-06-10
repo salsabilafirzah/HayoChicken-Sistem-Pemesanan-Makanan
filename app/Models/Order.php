@@ -16,6 +16,7 @@ class Order extends Model
         'user_id',
         'status',
         'delivery_address',
+        'delivery_note',
         'payment_method',
         'payment_receipt',
         'total_amount',

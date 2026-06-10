@@ -273,63 +273,93 @@
             <h1>Pesanan Aktif</h1>
         </div>
         <div class="scroll-area">
+            @forelse($orders as $order)
             <div class="order-card">
                 <div class="order-top">
-                    <div class="order-id">#HC-2024-0042 · Hari ini, 11:30</div>
-                    <div class="status-badge diantar">Sedang Diantar</div>
+                    <div class="order-id">#{{ $order->order_number }} · {{ $order->created_at->diffForHumans() }}</div>
+                    @php
+                        $statusClass = '';
+                        $statusLabel = '';
+                        $step = 1; // 1: Dipesan, 2: Diproses, 3: Diantar, 4: Selesai
+                        
+                        switch($order->status) {
+                            case 'NEW':
+                            case 'PENDING_VERIFICATION':
+                                $statusClass = 'proses'; $statusLabel = 'Menunggu'; $step = 1; break;
+                            case 'PROCESSING':
+                                $statusClass = 'proses'; $statusLabel = 'Diproses'; $step = 2; break;
+                            case 'DELIVERING':
+                                $statusClass = 'diantar'; $statusLabel = 'Sedang Diantar'; $step = 3; break;
+                            case 'DONE':
+                                $statusClass = 'tiba'; $statusLabel = 'Selesai'; $step = 4; break;
+                            default:
+                                $statusClass = 'proses'; $statusLabel = $order->status; $step = 1;
+                        }
+                    @endphp
+                    <div class="status-badge {{ $statusClass }}">{{ $statusLabel }}</div>
                 </div>
                 <div class="order-items">
+                    @foreach($order->orderItems as $item)
                     <div class="order-item-row">
-                        <span class="order-item-name">1x Ayam Goreng Crispy</span>
-                        <span class="order-item-price">Rp12.000</span>
+                        <span class="order-item-name">{{ $item->quantity }}x {{ $item->product_name_snapshot }}</span>
+                        <span class="order-item-price">Rp{{ number_format($item->subtotal, 0, ',', '.') }}</span>
                     </div>
-                    <div class="order-item-row">
-                        <span class="order-item-name">1x Es Teh Lemon</span>
-                        <span class="order-item-price">Rp5.000</span>
-                    </div>
+                    @endforeach
                 </div>
                 <hr class="order-divider">
                 <div class="order-total-row">
                     <span class="order-total-lbl">Total</span>
-                    <span class="order-total-val">Rp17.000</span>
+                    <span class="order-total-val">Rp{{ number_format($order->total_amount, 0, ',', '.') }}</span>
                 </div>
                 <div class="progress-wrap">
                     <div class="progress-label">Status Pengiriman</div>
                     <div class="progress-track">
                         <div class="p-step">
-                            <div class="p-dot done">✓</div>
+                            <div class="p-dot {{ $step >= 1 ? ($step == 1 ? 'active' : 'done') : 'pending' }}">
+                                {!! $step > 1 ? '✓' : '1' !!}
+                            </div>
                             <div class="p-txt">Dipesan</div>
                         </div>
-                        <div class="p-line done"></div>
+                        <div class="p-line {{ $step > 1 ? 'done' : '' }}"></div>
                         <div class="p-step">
-                            <div class="p-dot done">✓</div>
+                            <div class="p-dot {{ $step >= 2 ? ($step == 2 ? 'active' : 'done') : 'pending' }}">
+                                {!! $step > 2 ? '✓' : '2' !!}
+                            </div>
                             <div class="p-txt">Diproses</div>
                         </div>
-                        <div class="p-line done"></div>
+                        <div class="p-line {{ $step > 2 ? 'done' : '' }}"></div>
                         <div class="p-step">
-                            <div class="p-dot active"><svg viewBox="0 0 24 24" width="12" height="12"
-                                    stroke="currentColor" fill="none" stroke-width="2">
-                                    <circle cx="7" cy="17" r="2" />
-                                    <circle cx="17" cy="17" r="2" />
-                                    <path d="M5 17H3v-6l2-5h9l4 5h3v6h-2" />
-                                    <path d="M15 6h-6" />
-                                </svg></div>
+                            <div class="p-dot {{ $step >= 3 ? ($step == 3 ? 'active' : 'done') : 'pending' }}">
+                                @if($step == 3)
+                                    <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2"><circle cx="7" cy="17" r="2" /><circle cx="17" cy="17" r="2" /><path d="M5 17H3v-6l2-5h9l4 5h3v6h-2" /><path d="M15 6h-6" /></svg>
+                                @else
+                                    {!! $step > 3 ? '✓' : '3' !!}
+                                @endif
+                            </div>
                             <div class="p-txt">Diantar</div>
                         </div>
-                        <div class="p-line"></div>
+                        <div class="p-line {{ $step > 3 ? 'done' : '' }}"></div>
                         <div class="p-step">
-                            <div class="p-dot pending"><svg viewBox="0 0 24 24" width="12" height="12"
-                                    stroke="currentColor" fill="none" stroke-width="2">
-                                    <path
-                                        d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-                                    <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-                                    <line x1="12" y1="22.08" x2="12" y2="12" />
-                                </svg></div>
+                            <div class="p-dot {{ $step >= 4 ? ($step == 4 ? 'active' : 'done') : 'pending' }}">
+                                @if($step == 4)
+                                    ✓
+                                @else
+                                    <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1="12" y1="22.08" x2="12" y2="12" /></svg>
+                                @endif
+                            </div>
                             <div class="p-txt">Tiba</div>
                         </div>
                     </div>
                 </div>
             </div>
+            @empty
+            <div class="empty-state" style="padding: 100px 20px; display: flex; flex-direction: column; align-items: center; gap: 16px;">
+                <div class="e-icon" style="font-size: 5rem; color: #9B1A1A; opacity: 0.2;">🛵</div>
+                <h3 style="font-size: 1.2rem; font-weight: 800; color: #1A1A1A;">Tidak Ada Pesanan Aktif</h3>
+                <p style="font-size: 0.9rem; color: #888; max-width: 250px; line-height: 1.5; text-align: center;">Keranjangmu sedang kosong, atau semua pesananmu sudah sampai.</p>
+                <button onclick="window.location.href='{{ route('home') }}'" style="background: #9B1A1A; color: white; border: none; padding: 12px 24px; border-radius: 50px; font-weight: 700; cursor: pointer;">Pesan Sekarang</button>
+            </div>
+            @endforelse
         </div>
     </div>
 </body>
