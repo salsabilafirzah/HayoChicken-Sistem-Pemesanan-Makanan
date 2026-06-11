@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/constants.dart';
+import '../../../core/theme/app_theme.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -12,13 +14,15 @@ class SplashScreen extends ConsumerStatefulWidget {
 }
 
 class _SplashScreenState extends ConsumerState<SplashScreen> {
+  bool _showButtons = false;
+
   @override
   void initState() {
     super.initState();
-    _checkAuth();
+    _initFlow();
   }
 
-  Future<void> _checkAuth() async {
+  Future<void> _initFlow() async {
     const storage = FlutterSecureStorage();
     final token = await storage.read(key: AppConstants.tokenKey);
     final role = await storage.read(key: AppConstants.userRoleKey);
@@ -34,32 +38,75 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         }
       }
     } else {
-      if (mounted) context.go('/login');
+      if (mounted) {
+        setState(() => _showButtons = true);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.red,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.restaurant, size: 100, color: Colors.white),
-            const SizedBox(height: 20),
-            const Text(
-              "HAYO CHICKEN",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2,
+      backgroundColor: AppColors.deepRed,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32.0),
+          child: Column(
+            children: [
+              const Spacer(flex: 2),
+              
+              Hero(
+                tag: 'logo',
+                child: Image.asset(
+                  'assets/app_icon.png', 
+                  width: 200, 
+                  height: 200, 
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => const Icon(Icons.restaurant, size: 120, color: Colors.white),
+                ),
               ),
-            ),
-            const SizedBox(height: 10),
-            const CircularProgressIndicator(color: Colors.white),
-          ],
+              const SizedBox(height: 16),
+              
+              const Spacer(flex: 3),
+
+              if (_showButtons)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 40),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => context.push('/register'),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Colors.white, width: 2),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+                          ),
+                          child: Text("Daftar", style: GoogleFonts.inter(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => context.push('/login'),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Colors.white, width: 2),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+                          ),
+                          child: Text("Masuk", style: GoogleFonts.inter(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 40),
+                  child: CircularProgressIndicator(color: Colors.white),
+                ),
+            ],
+          ),
         ),
       ),
     );

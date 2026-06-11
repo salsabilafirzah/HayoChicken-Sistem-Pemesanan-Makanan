@@ -80,9 +80,11 @@ class AuthController extends Controller
             'token_type' => 'bearer',
             'expires_in' => config('jwt.ttl') * 60,
             'user' => [
+                'id' => $user->id,
                 'name' => $user->name,
                 'role' => $user->role,
-                'email' => $user->email
+                'email' => $user->email,
+                'phone' => $user->phone
             ]
         ]);
     }
@@ -229,25 +231,52 @@ class AuthController extends Controller
      */
     public function updateProfile(Request $request)
     {
-        $user = Auth::user();
-
-        $request->validate([
-            'name'  => 'required|string|max:255',
-            'phone' => ['required', 'string', 'regex:/^[0-9+]{10,15}$/'],
-        ]);
-
-        $user->name = $request->name;
-        if ($request->phone) {
-            $user->phone = $request->phone;
-        }
-        
-        $user->save();
-
-        if ($request->wantsJson()) {
-            return response()->json(['success' => true, 'message' => 'Profil berhasil diperbarui.']);
+        try {
+            // JURUS PAMUNGKAS: Ambil user langsung dari Token JWT tanpa nunggu middleware
+            $user = \Tymon\JWTAuth\Facades\JWTAuth::parseToken()->authenticate();
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Sesi berakhir atau token tidak valid.'], 401);
         }
 
-        return back()->with('success', 'Profil berhasil diperbarui.');
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'User tidak ditemukan.'], 401);
+        }
+
+        try {
+            $request->validate([
+                'name'  => 'required|string|max:255',
+                'phone' => 'nullable|string|max:20',
+            ]);
+
+            $user->name = $request->name;
+            if ($request->phone) {
+                $user->phone = $request->phone;
+            }
+            
+            $user->save();
+
+            return response()->json([
+                'success' => true, 
+                'message' => 'Profil berhasil diperbarui.',
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->phone
+                ]
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Data tidak valid.',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Gagal menyimpan ke database: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

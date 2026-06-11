@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../providers/auth_provider.dart';
+import '../../../core/theme/app_theme.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -13,106 +15,130 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
 
   void _handleLogin() async {
-    if (_formKey.currentState!.validate()) {
-      await ref.read(authProvider.notifier).login(
-            _emailController.text,
-            _passwordController.text,
-          );
-      
-      final authState = ref.read(authProvider);
-      if (authState.status == AuthStatus.authenticated) {
-        if (mounted) {
-          if (authState.user?.role == 'SELLER' || authState.user?.role == 'ADMIN') {
-            context.go('/seller/dashboard');
-          } else {
-            context.go('/home');
-          }
-        }
-      } else if (authState.errorMessage != null) {
-        if (mounted) {
-           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(authState.errorMessage!)),
-          );
-        }
+    final success = await ref.read(authProvider.notifier).login(
+      _emailController.text,
+      _passwordController.text,
+    );
+    if (success && mounted) {
+      final role = ref.read(authProvider).user?.role;
+      if (role == 'SELLER' || role == 'ADMIN') {
+        context.go('/seller/dashboard');
+      } else {
+        context.go('/home');
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isLoading = ref.watch(authProvider).status == AuthStatus.loading;
+    final authState = ref.watch(authProvider);
 
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Spacer(),
-                const Text(
-                  "Selamat Datang!",
-                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+      backgroundColor: AppColors.background,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Header Curved
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.only(top: 100, bottom: 40),
+              decoration: const BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(50),
+                  bottomRight: Radius.circular(50),
                 ),
-                const Text("Silakan masuk untuk menikmati menu kami"),
-                const SizedBox(height: 32),
-                TextFormField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: "Email",
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.email),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      GestureDetector(
+                        onTap: () => context.pop(),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
+                          child: const Icon(Icons.chevron_left, color: Colors.white),
+                        ),
+                      ),
+                      const SizedBox(width: 20),
+                      Text(
+                        "Masuk Akun",
+                        style: GoogleFonts.inter(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w900),
+                      ),
+                      const SizedBox(width: 50), // Spacer
+                    ],
                   ),
-                  validator: (v) => v!.isEmpty ? "Email wajib diisi" : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: "Password",
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.lock),
+                  const SizedBox(height: 8),
+                  Text(
+                    "Selamat datang kembali!",
+                    style: GoogleFonts.inter(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w500),
                   ),
-                  validator: (v) => v!.isEmpty ? "Password wajib diisi" : null,
-                ),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () => context.push('/reset-password'),
-                    child: const Text("Lupa Password?"),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: isLoading ? null : _handleLogin,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child: isLoading 
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text("LOGIN", style: TextStyle(color: Colors.white)),
-                ),
-                const Spacer(),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Belum punya akun?"),
-                    TextButton(
-                      onPressed: () => context.push('/register'),
-                      child: const Text("Daftar Sekarang"),
-                    ),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
+
+            Padding(
+              padding: const EdgeInsets.all(32.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Email", style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 14)),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _emailController,
+                    decoration: const InputDecoration(hintText: "nama@email.com"),
+                  ),
+                  const SizedBox(height: 24),
+                  Text("Password", style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 14)),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _passwordController,
+                    obscureText: true,
+                    decoration: const InputDecoration(hintText: "••••••••"),
+                  ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () => context.push('/reset-password'),
+                      child: Text("Lupa Password?", style: GoogleFonts.inter(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 13)),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: authState.isLoading ? null : _handleLogin,
+                      child: authState.isLoading 
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text("Masuk Sekarang"),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Center(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text("Belum punya akun? ", style: GoogleFonts.inter(color: Colors.grey[600])),
+                        GestureDetector(
+                          onTap: () => context.push('/register'),
+                          child: Text("Daftar", style: GoogleFonts.inter(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (authState.errorMessage != null)
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(authState.errorMessage!, style: const TextStyle(color: Colors.red)),
+              ),
+          ],
         ),
       ),
     );

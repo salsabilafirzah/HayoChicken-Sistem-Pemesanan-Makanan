@@ -1,192 +1,196 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/seller_order_provider.dart';
+import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../auth/providers/auth_provider.dart';
+import '../services/seller_order_service.dart';
+import '../../../core/theme/app_theme.dart';
 
-class SellerOrderListScreen extends ConsumerWidget {
+class SellerOrderListScreen extends ConsumerStatefulWidget {
   const SellerOrderListScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(sellerOrderProvider);
-
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.logout),
-          onPressed: () => _handleLogout(context, ref),
-        ),
-        title: const Text("Pesanan Masuk", style: TextStyle(fontWeight: FontWeight.bold)),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => ref.read(sellerOrderProvider.notifier).refreshOrders(),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          _buildFilterBar(ref, state.currentFilter),
-          Expanded(
-            child: state.isLoading 
-              ? const Center(child: CircularProgressIndicator())
-              : state.orders.isEmpty
-                ? const Center(child: Text("Tidak ada pesanan"))
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: state.orders.length,
-                    itemBuilder: (context, index) {
-                      final order = state.orders[index];
-                      return _OrderCard(order: order);
-                    },
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFilterBar(WidgetRef ref, String currentFilter) {
-    final filters = ['ALL', 'NEW', 'PROCESSING', 'DELIVERING', 'DONE', 'REJECTED'];
-    return SizedBox(
-      height: 60,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        itemCount: filters.length,
-        itemBuilder: (context, index) {
-          final f = filters[index];
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: ChoiceChip(
-              label: Text(f),
-              selected: currentFilter == f,
-              onSelected: (_) => ref.read(sellerOrderProvider.notifier).setFilter(f),
-              selectedColor: Colors.red,
-              labelStyle: TextStyle(color: currentFilter == f ? Colors.white : Colors.black),
-            ),
-          );
-        },
-      ),
-    );
-  }
+  ConsumerState<SellerOrderListScreen> createState() => _SellerOrderListScreenState();
 }
 
-class _OrderCard extends ConsumerWidget {
-  final dynamic order;
-  const _OrderCard({required this.order});
+class _SellerOrderListScreenState extends ConsumerState<SellerOrderListScreen> {
+  String _selectedStatus = 'ALL';
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(order['order_number'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                _StatusBadge(status: order['status']),
-              ],
-            ),
-            const Divider(),
-            Text("Pelanggan: ${order['user']['name']}"),
-            Text("Alamat: ${order['delivery_address']}", maxLines: 1, overflow: TextOverflow.ellipsis),
-            Text("Total: Rp ${order['total_amount']}", style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            _buildActionButtons(context, ref),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionButtons(BuildContext context, WidgetRef ref) {
-    final status = order['status'];
-    if (status == 'DONE' || status == 'REJECTED') return const SizedBox.shrink();
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
+  Widget build(BuildContext context) {
+    return Column(
       children: [
-        if (status == 'NEW') ...[
-          ElevatedButton(
-            onPressed: () => _updateStatus(context, ref, 'REJECTED', needsNote: true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.grey[200]),
-            child: const Text("Tolak", style: TextStyle(color: Colors.black)),
+        // FIXED HEADER HEIGHT (Match Laravel 100%)
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(24, 60, 24, 24),
+          decoration: const BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.only(bottomLeft: Radius.circular(35), bottomRight: Radius.circular(35)),
           ),
-          const SizedBox(width: 8),
-          ElevatedButton(
-            onPressed: () => _updateStatus(context, ref, 'PROCESSING'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-            child: const Text("Terima", style: TextStyle(color: Colors.white)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Dashboard Penjual", style: GoogleFonts.inter(color: Colors.white70, fontSize: 13)),
+                      Text("Hayo Chicken", style: GoogleFonts.inter(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
+                    ],
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      ref.read(authProvider.notifier).logout();
+                      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+                    },
+                    child: Container(
+                      width: 44, height: 44,
+                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
+                      child: const Icon(Icons.logout, color: Colors.white, size: 20),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              // Compact KPI Cards
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                childAspectRatio: 1.8,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                children: [
+                  _kpiCard(Icons.shopping_bag_outlined, "0", "Pesanan Hari Ini"),
+                  _kpiCard(Icons.payments_outlined, "Rp700k", "Pendapatan"),
+                  _kpiCard(Icons.notifications_active_outlined, "1", "Pesanan Baru"),
+                  _kpiCard(Icons.star_outline, "New", "Rating Toko"),
+                ],
+              ),
+            ],
           ),
-        ],
-        if (status == 'PROCESSING')
-          ElevatedButton(
-            onPressed: () => _updateStatus(context, ref, 'DELIVERING'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-            child: const Text("Kirim Pesanan", style: TextStyle(color: Colors.white)),
+        ),
+
+        // Status Tabs (Pill Style)
+        Padding(
+          padding: const EdgeInsets.only(top: 16, bottom: 8),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: ['ALL', 'NEW', 'PROCESSING', 'DELIVERING', 'DONE'].map((status) {
+                bool isSel = _selectedStatus == status;
+                return GestureDetector(
+                  onTap: () => setState(() => _selectedStatus = status),
+                  child: Container(
+                    margin: const EdgeInsets.only(right: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isSel ? const Color(0xFFF5A623) : Colors.white,
+                      borderRadius: BorderRadius.circular(50),
+                      boxShadow: [if(!isSel) BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4)],
+                    ),
+                    child: Text(
+                      status == 'ALL' ? 'Semua' : (status == 'NEW' ? 'Baru' : status),
+                      style: GoogleFonts.inter(color: isSel ? Colors.white : Colors.grey[600], fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
           ),
-        if (status == 'DELIVERING')
-          ElevatedButton(
-            onPressed: () => _updateStatus(context, ref, 'DONE'),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text("Selesai", style: TextStyle(color: Colors.white)),
+        ),
+
+        // Order List (Identical to Laravel Card)
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: 3,
+            itemBuilder: (context, index) {
+              return Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(30),
+                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 15, offset: const Offset(0, 8))],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text("#HC-20260608-0009 • 23.20", style: GoogleFonts.inter(color: Colors.grey[400], fontSize: 12)),
+                        _statusBadge('DONE'),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    Text("Budi Pelanggan", style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 18, color: const Color(0xFF1A1A1A))),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        const Icon(Icons.location_on, size: 14, color: AppColors.primary),
+                        const SizedBox(width: 4),
+                        Text("Blater", style: GoogleFonts.inter(color: Colors.grey[500], fontSize: 13)),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text("Rp12.000", style: GoogleFonts.inter(color: AppColors.primary, fontWeight: FontWeight.w900, fontSize: 20)),
+                        ElevatedButton(
+                          onPressed: () {},
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFE8F5E9),
+                            foregroundColor: Colors.green,
+                            elevation: 0,
+                            minimumSize: const Size(100, 40),
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                          ),
+                          child: Text("Selesai", style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
+        ),
       ],
     );
   }
 
-  void _updateStatus(BuildContext context, WidgetRef ref, String newStatus, {bool needsNote = false}) async {
-    String? note;
-    if (needsNote) {
-      note = await _showNoteDialog(context);
-      if (note == null) return;
-    }
-
-    final result = await ref.read(sellerOrderProvider.notifier).updateStatus(order['id'], newStatus, note: note);
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'])));
-    }
-  }
-
-  Future<String?> _showNoteDialog(BuildContext context) {
-    final controller = TextEditingController();
-    return showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Alasan Penolakan"),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(hintText: "Contoh: Stok ayam habis"),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Batal")),
-          TextButton(onPressed: () => Navigator.pop(context, controller.text), child: const Text("Kirim")),
+  Widget _kpiCard(IconData icon, String value, String label) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: Colors.white, size: 18),
+          const SizedBox(height: 4),
+          Text(value, style: GoogleFonts.inter(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900)),
+          Text(label, style: GoogleFonts.inter(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.w500)),
         ],
       ),
     );
   }
-}
 
-class _StatusBadge extends StatelessWidget {
-  final String status;
-  const _StatusBadge({required this.status});
-
-  @override
-  Widget build(BuildContext context) {
-    Color color = Colors.grey;
-    if (status == 'NEW') color = Colors.orange;
-    if (status == 'PROCESSING') color = Colors.green;
-    if (status == 'DELIVERING') color = Colors.blue;
-    if (status == 'DONE') color = Colors.red;
-    
+  Widget _statusBadge(String status) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(4)),
-      child: Text(status, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(color: const Color(0xFFE8F5E9), borderRadius: BorderRadius.circular(50)),
+      child: Text("Selesai", style: GoogleFonts.inter(color: Colors.green[700], fontSize: 11, fontWeight: FontWeight.w900)),
     );
   }
 }

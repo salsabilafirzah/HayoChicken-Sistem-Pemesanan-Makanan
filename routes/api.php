@@ -21,9 +21,11 @@ Route::prefix('v1')->group(function () {
     Route::get('products',       [ProductController::class, 'index']);
     Route::get('products/{id}',  [ProductController::class, 'show']);
     Route::get('categories',     [CategoryController::class, 'index']);
+    
+    // Rute Edit Profil (Manual Auth di Controller untuk menghindari error Unauthenticated)
+    Route::patch('auth/profile', [AuthController::class, 'updateProfile']);
 
     Route::middleware('auth:api,web')->group(function () {
-
         Route::post('auth/logout', [AuthController::class, 'logout']);
 
         // Keranjang

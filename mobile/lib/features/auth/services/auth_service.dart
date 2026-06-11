@@ -59,4 +59,20 @@ class AuthService {
     await _api.post('/auth/logout', data: {'refresh_token': refreshToken});
     await _storage.deleteAll();
   }
+
+  Future<Map<String, dynamic>> updateProfile({required String name, required String phone}) async {
+    try {
+      final response = await _api.patch('/auth/profile', data: {
+        'name': name,
+        'phone': phone,
+      });
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'message': 'Profil diperbarui'};
+      }
+      return {'success': false, 'message': 'Gagal memperbarui profil'};
+    } on DioException catch (e) {
+      return {'success': false, 'message': e.response?.data['message'] ?? 'Gagal menghubungi server'};
+    }
+  }
 }

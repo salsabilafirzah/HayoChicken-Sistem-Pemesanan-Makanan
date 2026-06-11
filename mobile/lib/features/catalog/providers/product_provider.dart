@@ -1,35 +1,32 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/product_model.dart';
+import '../models/category_model.dart';
 import '../services/product_service.dart';
 
 class ProductState {
   final List<ProductModel> products;
   final List<CategoryModel> categories;
-  final int? selectedCategoryId;
+  final List<int> favoriteIds;
   final bool isLoading;
-  final String? searchQuery;
 
   ProductState({
     this.products = const [],
     this.categories = const [],
-    this.selectedCategoryId,
+    this.favoriteIds = const [],
     this.isLoading = false,
-    this.searchQuery,
   });
 
   ProductState copyWith({
     List<ProductModel>? products,
     List<CategoryModel>? categories,
-    int? selectedCategoryId,
+    List<int>? favoriteIds,
     bool? isLoading,
-    String? searchQuery,
   }) {
     return ProductState(
       products: products ?? this.products,
       categories: categories ?? this.categories,
-      selectedCategoryId: selectedCategoryId ?? this.selectedCategoryId,
+      favoriteIds: favoriteIds ?? this.favoriteIds,
       isLoading: isLoading ?? this.isLoading,
-      searchQuery: searchQuery ?? this.searchQuery,
     );
   }
 }
@@ -38,37 +35,46 @@ class ProductNotifier extends StateNotifier<ProductState> {
   final ProductService _service = ProductService();
 
   ProductNotifier() : super(ProductState()) {
-    init();
+    loadData();
   }
 
-  Future<void> init() async {
+  Future<void> loadData() async {
     state = state.copyWith(isLoading: true);
-    final cats = await _service.getCategories();
-    state = state.copyWith(categories: cats);
-    await fetchProducts();
-  }
-
-  Future<void> fetchProducts() async {
-    state = state.copyWith(isLoading: true);
-    final result = await _service.getProducts(
-      categoryId: state.selectedCategoryId,
-      search: state.searchQuery,
-    );
-    state = state.copyWith(products: result['products'], isLoading: false);
-  }
-
-  void selectCategory(int? id) {
-    if (state.selectedCategoryId == id) {
-      state = state.copyWith(selectedCategoryId: null);
-    } else {
-      state = state.copyWith(selectedCategoryId: id);
+    try {
+      final products = await _service.getProducts();
+      final categories = await _service.getCategories();
+      final favorites = await _service.getFavorites();
+      
+      state = state.copyWith(
+        products: products,
+        categories: categories,
+        favoriteIds: favorites,
+        isLoading: false,
+      );
+    } catch (e) {
+      state = state.copyWith(isLoading: false);
     }
-    fetchProducts();
   }
 
-  void search(String query) {
-    state = state.copyWith(searchQuery: query);
-    fetchProducts();
+  Future<void> toggleFavorite(int productId) async {
+    // 1. Optimistic Update (Immediate Red Heart)
+    final isFav = state.favoriteIds.contains(productId);
+    final newFavs = List<int>.from(state.favoriteIds);
+    if (isFav) {
+      newFavs.remove(productId);
+    } else {
+      newFavs.add(productId);
+    }
+    state = state.copyWith(favoriteIds: newFavs);
+
+    // 2. Persistent Backend Sync
+    final success = await _service.toggleFavorite(productId);
+    
+    // 3. Optional: Sync back from server to ensure data integrity
+    if (success) {
+      final updatedFavs = await _service.getFavorites();
+      state = state.copyWith(favoriteIds: updatedFavs);
+    }
   }
 }
 

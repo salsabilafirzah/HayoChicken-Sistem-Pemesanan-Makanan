@@ -1,0 +1,262 @@
+/* ==========================================================================
+   HAYO CHICKEN - LOGIN PAGE CSS (EXACTLY MATCHING USER SCREENSHOT)
+   ========================================================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    background-color: #9e090f; /* Solid deep red background from the screenshot */
+    color: #ffffff;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+/* Center Container (Acts as a mobile viewport container) */
+.login-container {
+    width: 100%;
+    max-width: 420px;
+    height: 100vh;
+    height: 100dvh;
+    padding: 0 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    position: relative;
+}
+
+/* Logo Area (Teks + Maskot) - Placed high and large, exactly like the mockup */
+.logo-area {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 10vh; /* Top placement */
+    margin-bottom: auto; /* Pushes button-area to the bottom */
+}
+
+.logo-image {
+    width: 100%; /* Large size, spans the available width */
+    max-height: 62vh; /* Prevent overflowing on shorter screens */
+    object-fit: contain;
+}
+
+/* Buttons Area (Side-by-Side Pill Buttons at the bottom) */
+.button-area {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 8vh; /* Placed exactly near the bottom */
+}
+
+/* Pill shaped buttons with white borders, transparent backgrounds and white text */
+.btn-outline {
+    flex: 1;
+    background-color: transparent;
+    border: 2px solid #ffffff;
+    color: #ffffff;
+    padding: 14px 0;
+    font-size: 1.1rem;
+    font-weight: 600; /* Inter Semi-Bold */
+    border-radius: 999px; /* Pill shape */
+    cursor: pointer;
+    text-align: center;
+    outline: none;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn-outline:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.btn-outline:active {
+    transform: scale(0.97);
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Desktop layout container mockup */
+@media (min-width: 480px) {
+    body {
+        background: radial-gradient(circle, #b81419 0%, #680507 100%);
+    }
+    .login-container {
+        height: 850px;
+        background-color: #9e090f;
+        border-radius: 40px;
+        border: 8px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        overflow: hidden;
+    }
+}
+
+/* ==========================================================================
+   2. FORM SCREENS STYLING (login.html & register.html)
+   ========================================================================== */
+body.form-body {
+    background-color: #FFF9F2;
+    color: #333;
+}
+
+.form-container {
+    width: 100%;
+    max-width: 420px;
+    height: 100vh;
+    height: 100dvh;
+    background-color: #FFF9F2;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow-y: auto;
+}
+
+.form-header {
+    display: flex;
+    align-items: center;
+    padding: 24px 20px;
+    background-color: #9e090f;
+    color: white;
+    border-bottom-left-radius: 24px;
+    border-bottom-right-radius: 24px;
+}
+
+.back-btn {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    margin-right: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.form-header h1 {
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.form-content {
+    padding: 32px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.form-logo {
+    width: 120px;
+    height: 120px;
+    object-fit: contain;
+    margin-bottom: 24px;
+}
+
+.form-content h2 {
+    font-size: 1.5rem;
+    color: #9e090f;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.form-content p {
+    color: #666;
+    margin-bottom: 32px;
+    text-align: center;
+    font-size: 0.95rem;
+}
+
+form {
+    width: 100%;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: #9e090f;
+    box-shadow: 0 0 0 3px rgba(158, 9, 15, 0.1);
+}
+
+.forgot-password {
+    text-align: right;
+    margin-bottom: 24px;
+}
+
+.forgot-password a {
+    color: #9e090f;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.btn-primary {
+    width: 100%;
+    background-color: #9e090f;
+    color: white;
+    border: none;
+    padding: 16px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    margin-bottom: 24px;
+}
+
+.btn-primary:hover {
+    background-color: #80070c;
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+}
+
+.form-footer p {
+    color: #666;
+    margin-bottom: 0;
+}
+
+.form-footer a {
+    color: #9e090f;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+@media (min-width: 480px) {
+    body.form-body {
+        background: radial-gradient(circle, #b81419 0%, #680507 100%);
+    }
+    .form-container {
+        height: 850px;
+        border-radius: 40px;
+        border: 8px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    }
+}

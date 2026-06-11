@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import '../../../core/network/api_service.dart';
 import '../models/product_model.dart';
+import '../models/category_model.dart';
 
 class ProductService {
   final ApiService _api = ApiService();
@@ -15,25 +16,13 @@ class ProductService {
     }
   }
 
-  Future<Map<String, dynamic>> getProducts({
-    int? categoryId,
-    String? search,
-    int page = 1,
-  }) async {
+  Future<List<ProductModel>> getProducts() async {
     try {
-      final response = await _api.get('/products', queryParameters: {
-        if (categoryId != null) 'category_id': categoryId,
-        if (search != null) 'search': search,
-        'page': page,
-      });
-      
-      final List productsJson = response.data['data']['data'];
-      return {
-        'products': productsJson.map((e) => ProductModel.fromJson(e)).toList(),
-        'last_page': response.data['data']['last_page'],
-      };
+      final response = await _api.get('/products');
+      final List data = response.data['data']['data'];
+      return data.map((e) => ProductModel.fromJson(e)).toList();
     } catch (e) {
-      return {'products': <ProductModel>[], 'last_page': 1};
+      return [];
     }
   }
 
@@ -43,6 +32,26 @@ class ProductService {
       return ProductModel.fromJson(response.data['data']);
     } catch (e) {
       return null;
+    }
+  }
+
+  // FAVORITE API INTEGRATION
+  Future<List<int>> getFavorites() async {
+    try {
+      final response = await _api.get('/favorites');
+      final List data = response.data['data'];
+      return data.map((e) => int.parse(e['product_id'].toString())).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<bool> toggleFavorite(int productId) async {
+    try {
+      await _api.post('/favorites/toggle', data: {'product_id': productId});
+      return true;
+    } catch (e) {
+      return false;
     }
   }
 }

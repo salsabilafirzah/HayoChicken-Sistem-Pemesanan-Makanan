@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppColors {
-  static const Color primary = Color(0xFFD32F2F); // Red
-  static const Color accent = Color(0xFFFFC107);  // Amber/Chicken Gold
-  static const Color background = Color(0xFFF5F5F5);
-  static const Color surface = Colors.white;
-  static const Color textPrimary = Color(0xFF212121);
-  static const Color textSecondary = Color(0xFF757575);
+  static const primary = Color(0xFF9B1A1A);
+  static const deepRed = Color(0xFF7A1A1A);
+  static const background = Color(0xFFF9F4EB);
+  static const inputBackground = Color(0xFFEBE0D0);
 }
 
 class AppTheme {
@@ -16,10 +15,27 @@ class AppTheme {
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppColors.primary,
         primary: AppColors.primary,
-        secondary: AppColors.accent,
       ),
       scaffoldBackgroundColor: AppColors.background,
-      fontFamily: 'Roboto', // Default modern font
+      textTheme: GoogleFonts.interTextTheme(),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          minimumSize: const Size(double.infinity, 54),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+          textStyle: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: AppColors.inputBackground,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        hintStyle: const TextStyle(color: Color(0xFFBBAA99)),
+      ),
     );
   }
 }

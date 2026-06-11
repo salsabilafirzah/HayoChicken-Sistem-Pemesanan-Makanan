@@ -1,10 +1,8 @@
 class AppConstants {
-  // Gunakan 10.0.2.2 untuk akses localhost dari Android Emulator
-  // Gunakan IP lokal jika akses dari perangkat fisik
-  static const String baseUrl = "http://10.0.2.2:8000/api/v1";
+  // IP Wi-Fi Anda sudah benar di sini
+  static const String baseUrl = 'http://192.168.0.108:8000/api/v1';
   
-  // Storage Keys
-  static const String tokenKey = "access_token";
-  static const String refreshTokenKey = "refresh_token";
-  static const String userRoleKey = "user_role";
+  static const String tokenKey = 'auth_token';
+  static const String refreshTokenKey = 'refresh_token'; // Ini yang tadi terhapus
+  static const String userRoleKey = 'user_role';
 }
