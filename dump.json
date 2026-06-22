@@ -1,0 +1,27 @@
+[
+    {
+        "id": 1,
+        "user_id": 2,
+        "product_id": 1,
+        "quantity": 1,
+        "price_snapshot": 1000,
+        "selected_extras_snapshot": [],
+        "note": "test",
+        "is_checked": true,
+        "created_at": "2026-06-16T20:30:31.000000Z",
+        "updated_at": "2026-06-16T20:30:31.000000Z",
+        "product": {
+            "id": 1,
+            "category_id": 2,
+            "name": "Paket Ayam Geprek",
+            "slug": "paket-ayam-geprek",
+            "description": "Ayam geprek pedas + Nasi Putih + Es Teh Manis",
+            "base_price": 16000,
+            "image_url": "\/assets\/paket_geprek.png",
+            "is_available": true,
+            "created_at": "2026-06-16T18:39:40.000000Z",
+            "updated_at": "2026-06-16T18:39:40.000000Z",
+            "deleted_at": null
+        }
+    }
+]

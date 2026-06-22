@@ -5,14 +5,10 @@ class SellerOrderService {
   final ApiService _api = ApiService();
 
   Future<List<dynamic>> getOrders({String? status}) async {
-    try {
-      final response = await _api.get('/seller/orders', queryParameters: {
-        if (status != null && status != 'ALL') 'status': status,
-      });
-      return response.data['data'];
-    } catch (e) {
-      return [];
-    }
+    final response = await _api.get('/seller/orders', queryParameters: {
+      if (status != null && status != 'ALL') 'status': status,
+    });
+    return response.data['data'];
   }
 
   Future<Map<String, dynamic>> updateStatus(int orderId, String status, {String? note}) async {

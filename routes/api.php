@@ -11,22 +11,30 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
 
-    // Public
-    Route::post('auth/register',       [AuthController::class, 'register']);
-    Route::post('auth/login',          [AuthController::class, 'login']);
-    Route::post('auth/refresh',        [AuthController::class, 'refresh']);
-    Route::post('auth/forgot-password',[AuthController::class, 'sendResetLink']);
-    Route::post('auth/reset-password', [AuthController::class, 'resetPassword']);
-    
+    // --- AUTHENTICATION ENDPOINTS (SDD Lapis 1: Max 20 req/menit per IP) ---
+    Route::prefix('auth')->middleware('throttle:20,1')->group(function () {
+        // Public
+        Route::post('register',       [AuthController::class, 'register']);
+        Route::post('login',          [AuthController::class, 'login']);
+        Route::post('refresh',        [AuthController::class, 'refresh']);
+        Route::post('forgot-password',[AuthController::class, 'sendResetLink']);
+        Route::post('reset-password', [AuthController::class, 'resetPassword']);
+        
+        // Rute Edit Profil (Manual Auth di Controller)
+        Route::patch('profile', [AuthController::class, 'updateProfile']);
+        Route::patch('password', [AuthController::class, 'updatePassword']);
+
+        Route::middleware('auth:api,web')->group(function () {
+            Route::post('logout', [AuthController::class, 'logout']);
+            Route::get('me', [AuthController::class, 'me']);
+        });
+    });
+
+    // --- MAIN API ENDPOINTS ---
     Route::get('products',       [ProductController::class, 'index']);
     Route::get('products/{id}',  [ProductController::class, 'show']);
     Route::get('categories',     [CategoryController::class, 'index']);
-    
-    // Rute Edit Profil (Manual Auth di Controller untuk menghindari error Unauthenticated)
-    Route::patch('auth/profile', [AuthController::class, 'updateProfile']);
-
     Route::middleware('auth:api,web')->group(function () {
-        Route::post('auth/logout', [AuthController::class, 'logout']);
 
         // Keranjang
         Route::get('cart',                          [CartController::class, 'index']);

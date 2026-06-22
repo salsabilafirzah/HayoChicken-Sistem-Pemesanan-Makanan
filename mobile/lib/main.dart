@@ -9,13 +9,16 @@ import 'features/catalog/screens/main_screen.dart';
 import 'features/catalog/screens/product_detail_screen.dart';
 import 'features/orders/screens/checkout_screen.dart';
 import 'features/cart/screens/cart_screen.dart';
+import 'features/cart/models/cart_model.dart';
 import 'features/profile/screens/order_history_screen.dart';
 import 'features/profile/screens/saved_addresses_screen.dart';
 import 'features/profile/screens/active_orders_detail_screen.dart';
 import 'features/profile/screens/notifications_screen.dart';
 import 'features/profile/screens/change_password_screen.dart';
 import 'features/auth/screens/edit_profile_screen.dart';
+import 'features/catalog/screens/category_screen.dart';
 import 'features/catalog/screens/favorites_screen.dart';
+import 'features/catalog/screens/search_screen.dart';
 import 'features/seller/screens/seller_main_screen.dart';
 import 'features/orders/screens/order_success_screen.dart';
 import 'features/orders/screens/order_status_screen.dart';
@@ -42,8 +45,27 @@ class HayoChickenApp extends StatelessWidget {
         GoRoute(path: '/register', builder: (context, state) => const RegisterScreen()),
         GoRoute(path: '/reset-password', builder: (context, state) => const ResetPasswordScreen()),
         GoRoute(path: '/home', builder: (context, state) => const MainScreen()),
+        GoRoute(path: '/search', builder: (context, state) => const SearchScreen()),
+        GoRoute(
+          path: '/category/:id/:name', 
+          builder: (context, state) => CategoryScreen(
+            categoryId: int.parse(state.pathParameters['id']!), 
+            categoryName: state.pathParameters['name']!
+          )
+        ),
         GoRoute(path: '/cart', builder: (context, state) => const CartScreen()),
-        GoRoute(path: '/product/:id', builder: (context, state) => ProductDetailScreen(productId: int.parse(state.pathParameters['id']!))),
+        GoRoute(
+          path: '/product/:id', 
+          builder: (context, state) {
+            final extra = state.extra;
+            final from = state.uri.queryParameters['from'];
+            return ProductDetailScreen(
+              productId: int.parse(state.pathParameters['id']!),
+              editingCartItem: extra is CartItemModel ? extra : null,
+              fromFavorites: from == 'favorites',
+            );
+          }
+        ),
         GoRoute(path: '/checkout', builder: (context, state) => const CheckoutScreen()),
         
         // PROFILE DETAIL ROUTES
@@ -58,10 +80,13 @@ class HayoChickenApp extends StatelessWidget {
         GoRoute(path: '/seller/dashboard', builder: (context, state) => const SellerMainScreen()),
         GoRoute(
           path: '/order-success', 
-          builder: (context, state) => OrderSuccessScreen(
-            orderId: state.extra as String? ?? "#HC-20260611-0001",
-            totalAmount: "Rp48.000", // Would be passed from state in a real app
-          )
+          builder: (context, state) {
+            final extras = state.extra as Map<String, dynamic>? ?? {};
+            return OrderSuccessScreen(
+              orderId: extras['order_number']?.toString() ?? "#HC-20260611-0001",
+              totalAmount: "Rp${extras['total_amount']?.toString() ?? '48.000'}",
+            );
+          }
         ),
         GoRoute(
           path: '/order-status', 

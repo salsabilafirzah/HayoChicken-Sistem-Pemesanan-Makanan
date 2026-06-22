@@ -31,4 +31,19 @@ class OrderService {
       return [];
     }
   }
+
+  Future<Map<String, dynamic>?> getOrderDetail(String orderNumber) async {
+    try {
+      List<dynamic> allOrders = await getMyOrders();
+      try {
+         final specificOrder = allOrders.firstWhere((o) => o['order_number'] == orderNumber);
+         final response = await _api.get('/orders/${specificOrder['id']}');
+         return response.data['data'];
+      } catch (e) {
+         return null;
+      }
+    } catch (e) {
+      return null;
+    }
+  }
 }

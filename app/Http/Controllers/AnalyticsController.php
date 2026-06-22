@@ -27,6 +27,32 @@ class AnalyticsController extends Controller
                              
         $newOrderCount = Order::whereIn('status', ['NEW', 'PENDING_VERIFICATION'])->count();
 
+        // [New] Dynamic Periods
+        $startOfWeek = now()->subDays(6)->startOfDay(); // 7 rolling days
+        $startOfMonth = now()->startOfMonth();
+
+        $weekRevenue = Order::where('status', 'DONE')->where('created_at', '>=', $startOfWeek)->sum('total_amount');
+        $weekOrders = Order::where('status', 'DONE')->where('created_at', '>=', $startOfWeek)->count();
+
+        $monthRevenue = Order::where('status', 'DONE')->where('created_at', '>=', $startOfMonth)->sum('total_amount');
+        $monthOrders = Order::where('status', 'DONE')->where('created_at', '>=', $startOfMonth)->count();
+
+        // [New] Payment Summary
+        $paymentSummary = [
+            'COD' => (int) Order::where('status', 'DONE')->where('payment_method', 'COD')->sum('total_amount'),
+            'QRIS' => (int) Order::where('status', 'DONE')
+                             ->whereIn('payment_method', ['QRIS', 'QRIS_MANUAL'])
+                             ->sum('total_amount'),
+        ];
+
+        // [New] Revenue Over Time (Chart Data)
+        $revenueOverTime = Order::where('status', 'DONE')
+            ->where('created_at', '>=', $last30Days)
+            ->select(DB::raw('DATE(created_at) as date'), DB::raw('SUM(total_amount) as total'))
+            ->groupBy('date')
+            ->orderBy('date', 'ASC')
+            ->get();
+
         // Top Products [SEDANG #2]
         $topProducts = DB::table('order_items')
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
@@ -91,7 +117,21 @@ class AnalyticsController extends Controller
             'today' => [
                 'revenue' => (int) $todayRevenue,
                 'new_orders' => $newOrderCount,
+                'orders' => Order::where('status', 'DONE')->whereDate('created_at', today())->count(),
+                'avg_order_value' => Order::where('status', 'DONE')->whereDate('created_at', today())->count() > 0 ? (int) ($todayRevenue / Order::where('status', 'DONE')->whereDate('created_at', today())->count()) : 0,
             ],
+            'this_week' => [
+                'revenue' => (int) $weekRevenue,
+                'orders' => $weekOrders,
+                'avg_order_value' => $weekOrders > 0 ? (int) ($weekRevenue / $weekOrders) : 0,
+            ],
+            'this_month' => [
+                'revenue' => (int) $monthRevenue,
+                'orders' => $monthOrders,
+                'avg_order_value' => $monthOrders > 0 ? (int) ($monthRevenue / $monthOrders) : 0,
+            ],
+            'payment_summary' => $paymentSummary,
+            'revenue_over_time' => $revenueOverTime,
             'forecasting' => $forecasting
         ]);
     }

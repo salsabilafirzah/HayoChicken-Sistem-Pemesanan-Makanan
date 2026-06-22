@@ -15,6 +15,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isPasswordObscured = true;
 
   void _handleLogin() async {
     final success = await ref.read(authProvider.notifier).login(
@@ -97,8 +98,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const SizedBox(height: 8),
                   TextField(
                     controller: _passwordController,
-                    obscureText: true,
-                    decoration: const InputDecoration(hintText: "••••••••"),
+                    obscureText: _isPasswordObscured,
+                    decoration: InputDecoration(
+                      hintText: "••••••••",
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _isPasswordObscured ? Icons.visibility_off : Icons.visibility,
+                          color: Colors.grey,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _isPasswordObscured = !_isPasswordObscured;
+                          });
+                        },
+                      ),
+                    ),
                   ),
                   Align(
                     alignment: Alignment.centerRight,

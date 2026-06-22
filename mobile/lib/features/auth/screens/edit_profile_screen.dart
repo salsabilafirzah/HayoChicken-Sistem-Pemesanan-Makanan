@@ -38,7 +38,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F4EB),
+      backgroundColor: const Color(0xFFF8EFDE),
       body: Column(
         children: [
           // Header
@@ -165,7 +165,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(30),
         boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: TextFormField(
@@ -173,8 +173,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         keyboardType: keyboardType,
         style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 15),
         decoration: InputDecoration(
+          filled: false,
+          fillColor: Colors.white,
           prefixIcon: Icon(icon, color: const Color(0xFFBBAA99), size: 22),
           border: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          enabledBorder: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         ),
       ),

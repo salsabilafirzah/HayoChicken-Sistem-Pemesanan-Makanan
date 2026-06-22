@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../orders/providers/order_provider.dart';
 
-class ActiveOrdersDetailScreen extends StatelessWidget {
+class ActiveOrdersDetailScreen extends ConsumerWidget {
   const ActiveOrdersDetailScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F4EB),
+      backgroundColor: const Color(0xFFF8EFDE),
       body: Column(
         children: [
-          // HEADER (Match Image)
+          // HEADER
           Container(
             padding: const EdgeInsets.fromLTRB(20, 60, 20, 24),
             decoration: const BoxDecoration(
@@ -30,113 +33,53 @@ class ActiveOrdersDetailScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 16),
-                Text("Status Pesanan", style: GoogleFonts.inter(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900)),
+                Text("Pesanan Aktif", style: GoogleFonts.inter(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900)),
               ],
             ),
           ),
 
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(24),
-              children: [
-                // ORDER INFO CARD
-                _buildCard(
-                  child: Column(
-                    children: [
-                      _buildInfoRow("ID Pesanan", "#HC-20260610-0001", isBold: true),
-                      const SizedBox(height: 12),
-                      _buildInfoRow("Metode Bayar", "COD"),
-                      const SizedBox(height: 12),
-                      _buildInfoRow("Total", "Rp12.000", valueColor: AppColors.primary, isBold: true),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text("Status", style: GoogleFonts.inter(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w600)),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                            decoration: BoxDecoration(color: const Color(0xFFF9F4EB), borderRadius: BorderRadius.circular(50)),
-                            child: Text("Pesanan Baru", style: GoogleFonts.inter(color: const Color(0xFFB8860B), fontSize: 11, fontWeight: FontWeight.w800)),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                // TIMELINE CARD
-                _buildCard(
-                  title: "Riwayat Status",
-                  child: Column(
-                    children: [
-                      _buildTimelineItem(
-                        icon: Icons.check_rounded,
-                        title: "Pesanan Diterima",
-                        subtitle: "Pesanan berhasil dibuat",
-                        isCompleted: true,
-                        isActive: false,
-                        color: AppColors.primary,
-                      ),
-                      _buildTimelineItem(
-                        icon: Icons.access_time_rounded,
-                        title: "Sedang Dimasak",
-                        subtitle: "Pesanan sedang disiapkan",
-                        isCompleted: false,
-                        isActive: true,
-                        color: const Color(0xFFF1B434),
-                      ),
-                      _buildTimelineItem(
-                        icon: Icons.access_time_rounded,
-                        title: "Dalam Pengiriman",
-                        subtitle: "Estimasi 15-20 menit",
-                        isCompleted: false,
-                        isActive: false,
-                        color: Colors.grey.shade400,
-                      ),
-                      _buildTimelineItem(
-                        icon: Icons.access_time_rounded,
-                        title: "Pesanan Tiba",
-                        subtitle: "Selamat menikmati pesananmu!",
-                        isCompleted: false,
-                        isActive: false,
-                        isLast: true,
-                        color: Colors.grey.shade400,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                // SUMMARY CARD
-                _buildCard(
-                  child: Column(
-                    children: [
-                      _buildInfoRow("Subtotal (1 item)", "Rp12.000"),
-                      const SizedBox(height: 14),
-                      Text("--------------------------------------------------------------------------------", style: TextStyle(color: Colors.grey.withOpacity(0.3), fontSize: 8), maxLines: 1),
-                      const SizedBox(height: 14),
-                      _buildInfoRow("Total", "Rp12.000", isBold: true, valueColor: AppColors.primary, fontSize: 16),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
-
-                // HOME BUTTON
-                SizedBox(
-                  width: double.infinity, height: 60,
-                  child: ElevatedButton(
-                    onPressed: () => context.go('/home'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
-                      elevation: 5, shadowColor: AppColors.primary.withOpacity(0.4),
+            child: ref.watch(activeOrdersProvider).when(
+              data: (orders) {
+                if (orders.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.local_shipping_outlined, size: 64, color: Colors.grey[300]),
+                        const SizedBox(height: 16),
+                        Text("Tidak ada pesanan aktif", style: GoogleFonts.inter(color: Colors.grey, fontWeight: FontWeight.w600)),
+                      ],
                     ),
-                    child: Text("Kembali ke Beranda", style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w900, color: Colors.white)),
-                  ),
-                ),
-                const SizedBox(height: 40),
-              ],
+                  );
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.all(20),
+                  itemCount: orders.length,
+                  itemBuilder: (context, index) {
+                    final order = orders[index];
+                    final items = order['order_items'] as List<dynamic>;
+                    final summaryText = items.map((i) => "${i['product_name_snapshot']} ×${i['quantity']}").join(", ");
+                    
+                    final DateTime createdAt = DateTime.parse(order['created_at']).toLocal();
+                    final String formattedDate = DateFormat('dd MMM yyyy, HH:mm').format(createdAt);
+                    
+                    return InkWell(
+                      onTap: () => context.push('/order-status', extra: order['order_number']),
+                      child: _buildOrderCard(
+                        order['order_number'], 
+                        summaryText, 
+                        order['total_amount'].toString(), 
+                        formattedDate, 
+                        order['status'],
+                      ),
+                    );
+                  },
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+              error: (err, _) => Center(child: Text("Error: $err")),
             ),
           ),
         ],
@@ -144,75 +87,71 @@ class ActiveOrdersDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCard({String? title, required Widget child}) {
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'NEW':
+      case 'PENDING_VERIFICATION':
+        return const Color(0xFFF39C12);
+      case 'PROCESSING':
+        return const Color(0xFFE67E22);
+      case 'DELIVERING':
+        return Colors.blue;
+      case 'DONE':
+        return const Color(0xFF27AE60);
+      case 'REJECTED':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _getStatusLabel(String status) {
+    switch (status) {
+      case 'NEW': return 'Pesanan Baru';
+      case 'PENDING_VERIFICATION': return 'Verifikasi QRIS';
+      case 'PROCESSING': return 'Sedang Dimasak';
+      case 'DELIVERING': return 'Dikirim';
+      case 'DONE': return 'Selesai';
+      case 'REJECTED': return 'Dibatalkan';
+      default: return status;
+    }
+  }
+
+  Widget _buildOrderCard(String id, String menu, String price, String date, String status) {
+    final Color statusColor = _getStatusColor(status);
+    final String statusLabel = _getStatusLabel(status);
+    final formattedPrice = price.replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.');
+
     return Container(
+      margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.01), blurRadius: 10, offset: const Offset(0, 4))]),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (title != null) ...[
-            Text(title, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w900, color: const Color(0xFF1A1A1A))),
-            const SizedBox(height: 20),
-          ],
-          child,
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value, {bool isBold = false, Color? valueColor, double fontSize = 13}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: GoogleFonts.inter(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w600)),
-        Text(
-          value, 
-          style: GoogleFonts.inter(
-            fontWeight: isBold ? FontWeight.w900 : FontWeight.w700, 
-            color: valueColor ?? const Color(0xFF1A1A1A),
-            fontSize: fontSize,
-          )
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTimelineItem({
-    required IconData icon, 
-    required String title, 
-    required String subtitle, 
-    required Color color,
-    bool isCompleted = false,
-    bool isActive = false,
-    bool isLast = false,
-  }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Column(
-          children: [
-            Container(
-              width: 42, height: 42,
-              decoration: BoxDecoration(color: isCompleted || isActive ? color : Colors.grey.shade200, shape: BoxShape.circle),
-              child: Icon(icon, color: Colors.white, size: 22),
-            ),
-            if (!isLast)
-              Container(width: 2, height: 40, color: isCompleted ? color : Colors.grey.shade200),
-          ],
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const SizedBox(height: 8),
-              Text(title, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w900, color: isCompleted || isActive ? color : Colors.grey.shade400)),
-              Text(subtitle, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w500, color: Colors.grey.shade500)),
+              Text(id, style: GoogleFonts.inter(fontWeight: FontWeight.w900, fontSize: 13, color: const Color(0xFF1A1A1A))),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(50)),
+                child: Text(statusLabel, style: GoogleFonts.inter(color: statusColor, fontSize: 9, fontWeight: FontWeight.w800)),
+              ),
             ],
           ),
-        ),
-      ],
+          const SizedBox(height: 10),
+          Text(menu, style: GoogleFonts.inter(color: Colors.grey[600], fontSize: 12, fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("Rp $formattedPrice", style: GoogleFonts.inter(color: const Color(0xFF8B1A1A), fontWeight: FontWeight.w900, fontSize: 15)),
+              Text(date, style: GoogleFonts.inter(color: Colors.grey[400], fontSize: 11, fontWeight: FontWeight.w500)),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

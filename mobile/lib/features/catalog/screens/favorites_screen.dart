@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import '../providers/product_provider.dart';
+import '../../cart/providers/cart_provider.dart';
+import '../../../core/constants/constants.dart';
 import '../../../core/theme/app_theme.dart';
 
 class FavoritesScreen extends ConsumerWidget {
@@ -24,7 +27,7 @@ class FavoritesScreen extends ConsumerWidget {
     final favProducts = state.products.where((p) => state.favoriteIds.contains(p.id)).toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F4EB),
+      backgroundColor: const Color(0xFFF8EFDE),
       body: Stack(
         children: [
           Column(
@@ -38,7 +41,7 @@ class FavoritesScreen extends ConsumerWidget {
                 child: Row(
                   children: [
                     InkWell(
-                      onTap: () => context.go('/home'),
+                      onTap: () => context.pop(),
                       borderRadius: BorderRadius.circular(50),
                       child: Container(
                         padding: const EdgeInsets.all(8),
@@ -60,79 +63,142 @@ class FavoritesScreen extends ConsumerWidget {
                       itemCount: favProducts.length,
                       itemBuilder: (context, index) {
                         final product = favProducts[index];
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 16),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white, 
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)]
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 75, height: 75,
-                                decoration: BoxDecoration(color: const Color(0xFFF5EFE6), borderRadius: BorderRadius.circular(18)),
-                                child: Image.asset(_getProductAsset(product.name)),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(product.name, style: GoogleFonts.inter(fontWeight: FontWeight.w900, fontSize: 14)),
-                                    Text("Ditambahkan ke Favorit", style: GoogleFonts.inter(color: const Color(0xFFBBAA99), fontSize: 11, fontWeight: FontWeight.w600)),
-                                    const SizedBox(height: 6),
-                                    Text("Rp${product.basePrice.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}", 
-                                      style: GoogleFonts.inter(color: AppColors.primary, fontWeight: FontWeight.w900, fontSize: 16)),
-                                  ],
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: Slidable(
+                            key: ValueKey(product.id),
+                            endActionPane: ActionPane(
+                              motion: const ScrollMotion(),
+                              extentRatio: 0.22,
+                              children: [
+                                CustomSlidableAction(
+                                  onPressed: (context) {
+                                    showDialog(
+                                      context: context,
+                                      builder: (ctx) => Dialog(
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                                          backgroundColor: Colors.white,
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(24.0),
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Container(
+                                                  width: 70, height: 70,
+                                                  decoration: const BoxDecoration(color: Color(0xFFFFEBEE), shape: BoxShape.circle),
+                                                  child: const Center(child: Icon(Icons.delete_outline, color: Colors.red, size: 36)),
+                                                ),
+                                                const SizedBox(height: 16),
+                                                Text("Hapus Favorit?", style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 18, color: Colors.black)),
+                                                const SizedBox(height: 8),
+                                                Text("Yakin ingin menghapus menu ini dari daftar favorit?", style: GoogleFonts.inter(color: Colors.grey[600], fontSize: 12), textAlign: TextAlign.center),
+                                                const SizedBox(height: 24),
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: OutlinedButton(
+                                                        onPressed: () => Navigator.pop(ctx),
+                                                        style: OutlinedButton.styleFrom(foregroundColor: AppColors.primary, side: const BorderSide(color: AppColors.primary, width: 1.5), padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50))),
+                                                        child: const Text("Batal", style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 12),
+                                                    Expanded(
+                                                      child: ElevatedButton(
+                                                        onPressed: () {
+                                                          Navigator.pop(ctx);
+                                                          ref.read(productProvider.notifier).toggleFavorite(product.id);
+                                                        },
+                                                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFC62828), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50))),
+                                                        child: const Text("Hapus", style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                )
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                  },
+                                  backgroundColor: const Color(0xFFC62828),
+                                  foregroundColor: Colors.white,
+                                  borderRadius: BorderRadius.circular(24),
+                                  child: const Icon(Icons.delete_outline, size: 32),
                                 ),
+                              ],
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () => context.push('/product/${product.id}?from=favorites'),
+                                borderRadius: BorderRadius.circular(24),
+                                child: Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white, 
+                                    borderRadius: BorderRadius.circular(24),
+                                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)]
+                                  ),
+                                  child: Row(
+                                    children: [
+                                  Container(
+                                    width: 75, height: 75,
+                                    decoration: BoxDecoration(color: const Color(0xFFF5EFE6), borderRadius: BorderRadius.circular(18)),
+                                    child: product.imageUrl != null && product.imageUrl!.isNotEmpty
+                                        ? Image.network(
+                                            AppConstants.baseUrl.replaceAll('/api/v1', '') + product.imageUrl!,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (c, e, s) => Image.asset(_getProductAsset(product.name), fit: BoxFit.cover),
+                                          )
+                                        : Image.asset(_getProductAsset(product.name), fit: BoxFit.cover),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(product.name, style: GoogleFonts.inter(fontWeight: FontWeight.w900, fontSize: 14)),
+                                        Text("Ditambahkan ke Favorit", style: GoogleFonts.inter(color: const Color(0xFFBBAA99), fontSize: 11, fontWeight: FontWeight.w600)),
+                                        const SizedBox(height: 6),
+                                        Text("Rp${product.basePrice.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}", 
+                                          style: GoogleFonts.inter(color: AppColors.primary, fontWeight: FontWeight.w900, fontSize: 16)),
+                                      ],
+                                    ),
+                                  ),
+                                  Row(
+                                    children: [
+                                      // INDIVIDUAL + BUTTON
+                                      Material(
+                                        color: const Color(0xFF9D272B),
+                                        shape: const CircleBorder(),
+                                        child: InkWell(
+                                          onTap: () {
+                                            context.push('/product/${product.id}?from=favorites');
+                                          },
+                                          customBorder: const CircleBorder(),
+                                          child: const Padding(
+                                            padding: EdgeInsets.all(8),
+                                            child: Icon(Icons.add_shopping_cart, color: Colors.white, size: 20),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
-                              IconButton(
-                                onPressed: () => ref.read(productProvider.notifier).toggleFavorite(product.id),
-                                icon: const Icon(Icons.favorite, color: AppColors.primary),
-                              ),
-                            ],
+                            ),
+                                                          ),
+                            ),
                           ),
                         );
-                      },
-                    ),
+                  },
+                ),
               ),
             ],
           ),
 
-          // GLOBAL STICKY ORDER BAR
-          Positioned(
-            left: 20, right: 20, bottom: 40,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(22),
-                boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8))],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(10)),
-                    child: const Icon(Icons.timer_outlined, color: Colors.white, size: 24),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("5 Pesanan Aktif", style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13)),
-                        Text("Pantau Status Pesananmu", style: GoogleFonts.inter(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600)),
-                      ],
-                    ),
-                  ),
-                  const Icon(Icons.chevron_right, color: Colors.white, size: 20),
-                ],
-              ),
-            ),
-          ),
+          // REMOVED GLOBAL STICKY BAR TO PREVENT BULK BYPASSING ADDONS
         ],
       ),
     );

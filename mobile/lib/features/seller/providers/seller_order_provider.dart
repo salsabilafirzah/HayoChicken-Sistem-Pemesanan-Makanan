@@ -5,22 +5,26 @@ class SellerOrderState {
   final List<dynamic> orders;
   final bool isLoading;
   final String currentFilter;
+  final String? errorMessage;
 
   SellerOrderState({
     this.orders = const [],
     this.isLoading = false,
     this.currentFilter = 'ALL',
+    this.errorMessage,
   });
 
   SellerOrderState copyWith({
     List<dynamic>? orders,
     bool? isLoading,
     String? currentFilter,
+    String? errorMessage,
   }) {
     return SellerOrderState(
       orders: orders ?? this.orders,
       isLoading: isLoading ?? this.isLoading,
       currentFilter: currentFilter ?? this.currentFilter,
+      errorMessage: errorMessage ?? this.errorMessage,
     );
   }
 }
@@ -33,9 +37,13 @@ class SellerOrderNotifier extends StateNotifier<SellerOrderState> {
   }
 
   Future<void> refreshOrders() async {
-    state = state.copyWith(isLoading: true);
-    final orders = await _service.getOrders(status: state.currentFilter);
-    state = state.copyWith(orders: orders, isLoading: false);
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      final orders = await _service.getOrders(status: state.currentFilter);
+      state = state.copyWith(orders: orders, isLoading: false);
+    } catch (e) {
+      state = state.copyWith(orders: [], isLoading: false, errorMessage: e.toString());
+    }
   }
 
   void setFilter(String status) {
@@ -52,6 +60,6 @@ class SellerOrderNotifier extends StateNotifier<SellerOrderState> {
   }
 }
 
-final sellerOrderProvider = StateNotifierProvider<SellerOrderNotifier, SellerOrderState>((ref) {
+final sellerOrderProvider = StateNotifierProvider.autoDispose<SellerOrderNotifier, SellerOrderState>((ref) {
   return SellerOrderNotifier();
 });

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
+import '../../../core/network/api_service.dart';
 
 enum AuthStatus { initial, loading, authenticated, unauthenticated }
 
@@ -25,7 +26,18 @@ class AuthState {
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthService _authService = AuthService();
 
-  AuthNotifier() : super(AuthState());
+  AuthNotifier() : super(AuthState()) {
+    restoreSession();
+  }
+
+  Future<void> restoreSession() async {
+    final result = await _authService.fetchMe();
+    if (result['success']) {
+      state = state.copyWith(status: AuthStatus.authenticated, user: result['user']);
+    } else {
+      state = state.copyWith(status: AuthStatus.unauthenticated);
+    }
+  }
 
   Future<bool> login(String email, String password) async {
     state = state.copyWith(status: AuthStatus.loading);
@@ -42,6 +54,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> logout() async {
     await _authService.logout();
+    ApiService.clearToken();
     state = AuthState(status: AuthStatus.unauthenticated);
   }
 
@@ -62,6 +75,28 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       
       state = state.copyWith(user: updatedUser, status: AuthStatus.authenticated);
+      return true;
+    } else {
+      state = state.copyWith(status: AuthStatus.authenticated, errorMessage: result['message']);
+      state = state.copyWith(status: AuthStatus.authenticated, errorMessage: result['message']);
+      return false;
+    }
+  }
+
+  Future<bool> updatePassword({
+    required String oldPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    state = state.copyWith(status: AuthStatus.loading);
+    final result = await _authService.updatePassword(
+      oldPassword: oldPassword,
+      newPassword: newPassword,
+      newPasswordConfirm: confirmPassword,
+    );
+    
+    if (result['success']) {
+      state = state.copyWith(status: AuthStatus.authenticated, errorMessage: null);
       return true;
     } else {
       state = state.copyWith(status: AuthStatus.authenticated, errorMessage: result['message']);

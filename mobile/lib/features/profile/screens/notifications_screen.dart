@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../orders/providers/order_provider.dart';
 
-class NotificationsScreen extends StatelessWidget {
+class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F4EB),
+      backgroundColor: const Color(0xFFF8EFDE),
       body: Column(
         children: [
           // Header Red Design
@@ -22,7 +25,7 @@ class NotificationsScreen extends StatelessWidget {
             child: Row(
               children: [
                 GestureDetector(
-                  onTap: () => context.go('/home'),
+                  onTap: () => context.pop(),
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
@@ -36,45 +39,96 @@ class NotificationsScreen extends StatelessWidget {
           ),
 
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(24),
-              children: [
-                _buildSectionHeader("TERBARU"),
-                _buildNotificationItem(
-                  icon: Icons.local_shipping_outlined,
-                  iconColor: Colors.orange,
-                  title: "Pesanan Sedang Diantar",
-                  body: "Pesanan #HC-2024-0042 sedang dalam perjalanan ke alamat kamu.",
-                  time: "Baru saja",
-                  isNew: true,
-                ),
-                _buildNotificationItem(
-                  icon: Icons.favorite_border,
-                  iconColor: Colors.red,
-                  title: "Promo Hari Ini!",
-                  body: "Diskon 20% untuk semua menu paket. Berlaku sampai jam 21.00 hari ini!",
-                  time: "1 jam yang lalu",
-                  isNew: true,
-                ),
-                const SizedBox(height: 24),
-                _buildSectionHeader("SEBELUMNYA"),
-                _buildNotificationItem(
-                  icon: Icons.check_circle_outline,
-                  iconColor: Colors.green,
-                  title: "Pesanan Berhasil Diterima",
-                  body: "Pesanan #HC-2024-0038 telah diterima. Terima kasih sudah memesan di Hayo Chicken!",
-                  time: "Kemarin, 13:20",
-                  isNew: false,
-                ),
-                _buildNotificationItem(
-                  icon: Icons.info_outline,
-                  iconColor: Colors.blue,
-                  title: "Menu Baru Tersedia",
-                  body: "Coba menu terbaru kami: Ayam Geprek Mozzarella. Rasanya pasti bikin nagih!",
-                  time: "3 hari yang lalu",
-                  isNew: false,
-                ),
-              ],
+            child: ref.watch(allOrdersProvider).when(
+              data: (orders) {
+                if (orders.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.notifications_off_outlined, size: 60, color: Colors.grey[300]),
+                        const SizedBox(height: 16),
+                        Text("Belum ada notifikasi baru", style: GoogleFonts.inter(color: Colors.grey, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  );
+                }
+
+                // Urutkan berdasarkan waktu terbaru (updated_at atau created_at)
+                final sortedOrders = List<dynamic>.from(orders)
+                  ..sort((a, b) {
+                    final tA = DateTime.parse(a['updated_at'] ?? a['created_at']);
+                    final tB = DateTime.parse(b['updated_at'] ?? b['created_at']);
+                    return tB.compareTo(tA);
+                  });
+
+                return ListView.builder(
+                  padding: const EdgeInsets.all(24),
+                  itemCount: sortedOrders.length,
+                  itemBuilder: (context, index) {
+                    final order = sortedOrders[index];
+                    final dateObj = DateTime.parse(order['updated_at'] ?? order['created_at']).toLocal();
+                    final formattedTime = DateFormat('dd MMM yyyy, HH:mm').format(dateObj);
+                    
+                    // Menentukan detail visual notifikasi berdasarkan status pesanan
+                    String title = "Pesanan Diperbarui";
+                    String body = "Status pesanan ${order['order_number']} telah diperbarui.";
+                    IconData icon = Icons.info_outline;
+                    Color iconColor = Colors.blue;
+                    
+                    switch (order['status']) {
+                      case 'NEW':
+                        title = "Pesanan Baru Diterima";
+                        body = "Pesanan ${order['order_number']} berhasil dibuat. Menunggu konfirmasi toko!";
+                        icon = Icons.receipt_long;
+                        iconColor = const Color(0xFFF39C12);
+                        break;
+                      case 'PENDING_VERIFICATION':
+                        title = "Menunggu Verifikasi QRIS";
+                        body = "Pesanan ${order['order_number']} menunggu admin mengecek bukti transfermu.";
+                        icon = Icons.qr_code_scanner;
+                        iconColor = const Color(0xFFE67E22);
+                        break;
+                      case 'PROCESSING':
+                        title = "Pesanan Sedang Dimasak";
+                        body = "Yay! Dapur lagi nyiapin pesanan ${order['order_number']} pesenanmu bosku.";
+                        icon = Icons.outdoor_grill_outlined;
+                        iconColor = const Color(0xFFE67E22);
+                        break;
+                      case 'DELIVERING':
+                        title = "Pesanan Di Jalan!";
+                        body = "Siap-siap! Pesanan ${order['order_number']} lagi meluncur ke tempatmu.";
+                        icon = Icons.local_shipping_outlined;
+                        iconColor = Colors.blue;
+                        break;
+                      case 'DONE':
+                        title = "Pesanan Selesai";
+                        body = "Pesanan ${order['order_number']} telah selesai. Selamat menikmati!";
+                        icon = Icons.check_circle_outline;
+                        iconColor = Colors.green;
+                        break;
+                      case 'REJECTED':
+                        title = "Pesanan Dibatalkan";
+                        body = "Yah, pesanan ${order['order_number']} dibatalkan sama toko.";
+                        icon = Icons.cancel_outlined;
+                        iconColor = Colors.red;
+                        break;
+                    }
+
+                    // Tampilkan item notif
+                    return _buildNotificationItem(
+                      icon: icon,
+                      iconColor: iconColor,
+                      title: title,
+                      body: body,
+                      time: formattedTime,
+                      isNew: index < 2, // Highlight 2 pesanan terbaru
+                    );
+                  },
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+              error: (err, _) => Center(child: Text("Error: $err")),
             ),
           ),
         ],

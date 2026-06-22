@@ -14,7 +14,7 @@ class CartController extends Controller
      */
     public function index()
     {
-        $items = CartItem::with('product')
+        $items = CartItem::with('product.productExtras')
             ->where('user_id', Auth::id())
             ->get();
             
@@ -29,6 +29,7 @@ class CartController extends Controller
      */
     public function store(Request $request)
     {
+        file_put_contents(public_path('cart_request.txt'), json_encode($request->all(), JSON_PRETTY_PRINT));
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
@@ -46,29 +47,34 @@ class CartController extends Controller
             ], 422);
         }
 
-        $extrasJson = json_encode($validated['selected_extras_snapshot'] ?? []);
+        try {
+            $extrasJson = json_encode($validated['selected_extras_snapshot'] ?? []);
 
-        // Cari item dengan kombinasi PERSIS sama: produk + extras yang sama
-        $existingItem = CartItem::where('user_id', Auth::id())
-            ->where('product_id', $validated['product_id'])
-            ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(selected_extras_snapshot, '$')) = ?", [$extrasJson])
-            ->first();
+            // Cari item dengan kombinasi PERSIS sama: produk + extras yang sama
+            $existingItem = CartItem::where('user_id', Auth::id())
+                ->where('product_id', $validated['product_id'])
+                ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(selected_extras_snapshot, '$')) = ?", [$extrasJson])
+                ->first();
 
-        if ($existingItem) {
-            // Tambah quantity (upsert)
-            $existingItem->increment('quantity', $validated['quantity']);
-            $cartItem = $existingItem->fresh();
-        } else {
-            // Buat baris baru (extras berbeda = item berbeda)
-            $cartItem = CartItem::create([
-                'user_id' => Auth::id(),
-                'product_id' => $validated['product_id'],
-                'quantity' => $validated['quantity'],
-                'price_snapshot' => $product->base_price,
-                'selected_extras_snapshot' => $validated['selected_extras_snapshot'] ?? [],
-                'note' => $validated['note'] ?? null,
-                'is_checked' => true,
-            ]);
+            if ($existingItem) {
+                // Tambah quantity (upsert)
+                $existingItem->increment('quantity', $validated['quantity']);
+                $cartItem = $existingItem->fresh();
+            } else {
+                // Buat baris baru (extras berbeda = item berbeda)
+                $cartItem = CartItem::create([
+                    'user_id' => Auth::id(),
+                    'product_id' => $validated['product_id'],
+                    'quantity' => $validated['quantity'],
+                    'price_snapshot' => $product->base_price,
+                    'selected_extras_snapshot' => $validated['selected_extras_snapshot'] ?? [],
+                    'note' => $validated['note'] ?? null,
+                    'is_checked' => true,
+                ]);
+            }
+        } catch (\Exception $e) {
+            file_put_contents(public_path('cart_error.txt'), $e->getMessage() . "\n\n" . $e->getTraceAsString());
+            throw $e;
         }
 
         return response()->json([

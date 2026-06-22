@@ -6,6 +6,7 @@ import '../providers/product_provider.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../cart/providers/cart_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/constants/constants.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -16,13 +17,10 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final PageController _bannerController = PageController();
-  final TextEditingController _searchController = TextEditingController();
   int _currentBanner = 0;
-  int? _selectedCategoryId;
 
   @override
   void dispose() {
-    _searchController.dispose();
     _bannerController.dispose();
     super.dispose();
   }
@@ -43,11 +41,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final authState = ref.watch(authProvider);
     final userName = authState.user?.name ?? "...";
 
-    final filteredProducts = state.products.where((p) {
-      final matchesCategory = _selectedCategoryId == null || p.categoryId == _selectedCategoryId;
-      final matchesSearch = p.name.toLowerCase().contains(_searchController.text.toLowerCase());
-      return matchesCategory && matchesSearch;
-    }).toList();
+    final filteredProducts = state.products.toList();
 
     return Column(
       children: [
@@ -96,7 +90,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 height: 54,
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: const Color(0xFFF5F5F5),
                   borderRadius: BorderRadius.circular(50),
                   boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 15, offset: const Offset(0, 5))],
                 ),
@@ -106,8 +100,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: TextField(
-                        controller: _searchController,
-                        onChanged: (v) => setState(() {}),
+                        readOnly: true,
+                        onTap: () => context.push('/search'),
                         cursorColor: AppColors.primary,
                         decoration: InputDecoration(
                           hintText: "Lagi mau mam apa?",
@@ -133,51 +127,60 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: ListView(
             padding: EdgeInsets.zero,
             children: [
-              const SizedBox(height: 24),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                child: Text(
+                  "Kategori",
+                  style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w900, color: const Color(0xFF1A1A1A))
+                ),
+              ),
               SizedBox(
-                height: 130,
+                height: 145,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: state.categories.length,
                   itemBuilder: (context, index) {
                     final cat = state.categories[index];
-                    final isSelected = _selectedCategoryId == cat.id;
                     return GestureDetector(
-                      onTap: () => setState(() {
-                        if (_selectedCategoryId == cat.id) {
-                          _selectedCategoryId = null;
-                        } else {
-                          _selectedCategoryId = cat.id;
-                        }
-                      }),
+                      onTap: () => context.push('/category/${cat.id}/${cat.name}'),
                       child: Container(
-                        width: 95,
+                        width: 100,
                         margin: const EdgeInsets.only(right: 14),
                         child: Column(
                           children: [
                             Container(
-                              width: 95, height: 95,
+                              width: 100, height: 100,
                               decoration: BoxDecoration(
-                                color: isSelected ? AppColors.primary.withOpacity(0.1) : const Color(0xFFEDE0D0), 
+                                color: const Color(0xFFEFE0C4),
                                 borderRadius: BorderRadius.circular(28),
-                                border: isSelected ? Border.all(color: AppColors.primary, width: 2) : null,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.06),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 5),
+                                  )
+                                ],
                               ),
                               child: Center(
-                                child: Image.asset(
-                                  _getCategoryIcon(cat.name), 
-                                  width: 60, height: 60,
-                                  errorBuilder: (c, e, s) => const Icon(Icons.fastfood, color: AppColors.primary, size: 40),
+                                child: Transform.scale(
+                                  scale: _getCategoryIcon(cat.name).contains('mie') ? 2.3 : 1.1,
+                                  child: Image.asset(
+                                    _getCategoryIcon(cat.name),
+                                    width: 90, height: 90,
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (c, e, s) => const Icon(Icons.fastfood, color: AppColors.primary, size: 40),
+                                  ),
                                 ),
                               ),
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              cat.name, 
+                              cat.name,
                               style: GoogleFonts.inter(
-                                fontSize: 12, 
-                                fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700, 
-                                color: isSelected ? AppColors.primary : const Color(0xFF555555)
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF444444)
                               )
                             ),
                           ],
@@ -197,7 +200,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       controller: _bannerController,
                       onPageChanged: (v) => setState(() => _currentBanner = v),
                       children: [
-                        _buildBanner(const Color(0xFFE67E22), "Best Seller", "Ayam geprek + sambal matah", "Pesan Sekarang", "assets/images/ayam_geprek.png", 1),
+                        _buildBanner(const Color(0xFFE67E22), "Best Seller", "Ayam Geprek + Nasi + Es Teh", "Pesan Sekarang", "assets/images/paket_geprek.png", 1),
                         _buildBanner(const Color(0xFF27AE60), "Promo Jumat", "Free es teh setiap hari jumat", "Klaim Promo", "assets/images/three_lemon_teas.png", 4),
                         _buildBanner(const Color(0xFF2980B9), "Hemat Banget", "Paket nasi + ayam cuma 15rb", "Cek Menu", "assets/images/paket_nasi_mie.png", 5),
                       ],
@@ -217,12 +220,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
               Padding(
                 padding: const EdgeInsets.fromLTRB(24, 35, 24, 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text("Menu Populer", style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w900, color: const Color(0xFF1A1A1A))),
-                    Text("Lihat Semua", style: GoogleFonts.inter(color: AppColors.primary.withOpacity(0.6), fontSize: 12, fontWeight: FontWeight.w900)),
-                  ],
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text("Daftar Menu", style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w900, color: const Color(0xFF1A1A1A))),
                 ),
               ),
 
@@ -234,7 +234,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     padding: const EdgeInsets.symmetric(horizontal: 18),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, childAspectRatio: 0.63, crossAxisSpacing: 14, mainAxisSpacing: 14),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, childAspectRatio: 0.92, crossAxisSpacing: 14, mainAxisSpacing: 14),
                     itemCount: filteredProducts.length,
                     itemBuilder: (context, index) {
                       return _ProductCard(product: filteredProducts[index]);
@@ -245,9 +245,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 40),
                         child: Text(
-                          _searchController.text.isEmpty 
-                            ? "Menu tidak tersedia untuk kategori ini" 
-                            : "Menu yang kamu cari tidak ditemukan", 
+                          "Menu tidak tersedia untuk kategori ini",
                           style: GoogleFonts.inter(color: Colors.grey, fontWeight: FontWeight.w600)
                         ),
                       ),
@@ -297,7 +295,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             Hero(
               tag: "banner_$productId",
-              child: Image.asset(asset, width: 130, height: 130, fit: BoxFit.contain),
+              child: Transform.scale(
+                scale: asset.contains('paket_geprek') ? 1.6 : 1.0,
+                child: Image.asset(asset, width: 130, height: 130, fit: BoxFit.contain),
+              ),
             ),
           ],
         ),
@@ -368,6 +369,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
       ),
+
+
+
+
     );
   }
 
@@ -379,7 +384,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       builder: (context) => Container(
         padding: const EdgeInsets.fromLTRB(28, 32, 28, 40),
         decoration: const BoxDecoration(
-          color: Color(0xFFF9F4EB),
+          color: Color(0xFFF8EFDE),
           borderRadius: BorderRadius.only(topLeft: Radius.circular(40), topRight: Radius.circular(40)),
         ),
         child: Column(
@@ -411,13 +416,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return GestureDetector(
       onTap: () {
         Navigator.pop(context);
-        context.push('/profile/orders');
+        context.push('/order-status', extra: id);
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: Colors.white, 
+          color: Colors.white,
           borderRadius: BorderRadius.circular(22),
           boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
         ),
@@ -469,86 +474,93 @@ class _ProductCard extends ConsumerWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 2),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1E9DA), 
-        borderRadius: BorderRadius.circular(35), 
         boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 8))]
       ),
-      child: Stack(
-        children: [
-          // 1. MAIN CARD NAVIGATION (Base Layer)
-          Positioned.fill(
-            child: InkWell(
-              onTap: () => context.push('/product/${product.id}'),
-              borderRadius: BorderRadius.circular(35),
-              child: const SizedBox.expand(),
+      child: Material(
+        color: const Color(0xFFEFE0C4),
+        borderRadius: BorderRadius.circular(20),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => context.push('/product/${product.id}'),
+          child: Stack(
+            children: [          // 2. RED WAVE BACKGROUND
+          Positioned(
+            top: 0, left: 0, right: 0, height: 125,
+            child: ClipPath(
+              clipper: _WaveClipper(),
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF5F0004), Color(0xFF9D272B)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20))
+                ),
+              ),
             ),
           ),
 
-          // 2. VISUAL CONTENT
-          Column(
-            children: [
-              // Wave & Image Area
-              ClipPath(
-                clipper: _WaveClipper(),
-                child: Container(
-                  height: 120, width: double.infinity,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF8B1A1A), 
-                    borderRadius: BorderRadius.only(topLeft: Radius.circular(35), topRight: Radius.circular(35))
-                  ),
-                  child: Center(
-                    child: Hero(
-                      tag: "product_${product.id}",
-                      child: Image.asset(_getProductAsset(product.name), width: 135, height: 135, fit: BoxFit.contain),
-                    ),
-                  ),
-                ),
+          // 3. PRODUCT IMAGE
+          Positioned(
+            top: 5, left: 0, right: 0, height: 115,
+            child: Center(
+              child: Hero(
+                tag: "product_${product.id}",
+                child: product.imageUrl != null && product.imageUrl!.isNotEmpty
+                  ? Image.network(
+                      AppConstants.baseUrl.replaceAll('/api/v1', '') + product.imageUrl!,
+                      fit: BoxFit.contain,
+                      errorBuilder: (c, e, s) => Image.asset(_getProductAsset(product.name), fit: BoxFit.contain),
+                    )
+                  : Image.asset(_getProductAsset(product.name), fit: BoxFit.contain),
               ),
-              const SizedBox(height: 35),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            ),
+          ),
+
+          // 4. TEXT CONTENT & ACTION ROW
+          Positioned(
+            left: 14, right: 14, bottom: 12,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(product.name, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w900)),
+                ),
+                Text(product.description ?? "", style: GoogleFonts.inter(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.w600), maxLines: 1),
+                const SizedBox(height: 6),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(product.name, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w900), maxLines: 1),
-                    Text(product.description ?? "", style: GoogleFonts.inter(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.w600), maxLines: 1),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text("Rp ${product.basePrice}", style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w900, color: AppColors.primary)),
-                        
-                        // 3. ACTION BUTTON (Direct Add and Update Badge)
-                        Material(
-                          color: const Color(0xFF8B1A1A),
-                          shape: const CircleBorder(),
-                          child: InkWell(
-                            onTap: () async {
-                              await ref.read(cartProvider.notifier).addToCart(
-                                productId: product.id, 
-                                quantity: 1, 
-                                extras: []
-                              );
-                              // NO NAVIGATION HERE
-                            },
-                            customBorder: const CircleBorder(),
-                            child: const Padding(
-                              padding: EdgeInsets.all(8),
-                              child: Icon(Icons.add, color: Colors.white, size: 20),
-                            ),
-                          ),
+                    Text("Rp ${product.basePrice}", style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w900, color: AppColors.primary)),
+
+                    // ACTION BUTTON
+                    Material(
+                      color: const Color(0xFF9D272B),
+                      shape: const CircleBorder(),
+                      child: InkWell(
+                        onTap: () {
+                          context.push('/product/${product.id}');
+                        },
+                        customBorder: const CircleBorder(),
+                        child: const Padding(
+                          padding: EdgeInsets.all(8),
+                          child: Icon(Icons.add, color: Colors.white, size: 20),
                         ),
-                      ],
+                      ),
                     ),
                   ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
 
-          // 4. FAVORITE BUTTON (Top Corner)
+          // 5. FAVORITE BUTTON (Top Corner)
           Positioned(
-            top: 15, right: 15,
+            top: 12, right: 12,
             child: Material(
               color: Colors.white,
               shape: const CircleBorder(),
@@ -557,21 +569,23 @@ class _ProductCard extends ConsumerWidget {
               child: InkWell(
                 onTap: () {
                   ref.read(productProvider.notifier).toggleFavorite(product.id);
-                  context.push('/favorites');
+                  // context.push('/favorites'); dihapus agar cuma stay dan berubah merah.
                 },
                 customBorder: const CircleBorder(),
                 child: Padding(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(8),
                   child: Icon(
-                    isFavorite ? Icons.favorite : Icons.favorite_border, 
-                    color: isFavorite ? AppColors.primary : const Color(0xFFBBAA99), 
-                    size: 18,
+                    isFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: isFavorite ? AppColors.primary : const Color(0xFFBBAA99),
+                    size: 16,
                   ),
                 ),
               ),
             ),
           ),
         ],
+      ),
+      ),
       ),
     );
   }
@@ -582,7 +596,7 @@ class _WaveClipper extends CustomClipper<Path> {
   Path getClip(Size size) {
     var path = Path();
     path.lineTo(0, size.height * 0.65);
-    
+
     // Wave smoothing
     var firstControlPoint = Offset(size.width * 0.25, size.height * 0.85);
     var firstEndPoint = Offset(size.width * 0.5, size.height * 0.7);
@@ -591,7 +605,7 @@ class _WaveClipper extends CustomClipper<Path> {
     var secondControlPoint = Offset(size.width * 0.75, size.height * 0.55);
     var secondEndPoint = Offset(size.width, size.height * 0.7);
     path.quadraticBezierTo(secondControlPoint.dx, secondControlPoint.dy, secondEndPoint.dx, secondEndPoint.dy);
-    
+
     path.lineTo(size.width, 0);
     path.close();
     return path;

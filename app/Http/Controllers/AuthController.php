@@ -40,14 +40,29 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
+        // SDD Lapis 2: Batas gagal login (5x dalam 5 Menit per akun/IP)
+        $throttleKey = strtolower($request->input('email')) . '|' . $request->ip();
+
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = \Illuminate\Support\Facades\RateLimiter::availableIn($throttleKey);
+            $message = "Akun dikunci sementara karena terlalu banyak percobaan. Coba lagi dalam {$seconds} detik.";
+            if ($request->wantsJson()) {
+                return response()->json(['message' => $message], 429);
+            }
+            return back()->with('error', $message);
+        }
+
         $user = User::where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->getAuthPassword())) {
+            \Illuminate\Support\Facades\RateLimiter::hit($throttleKey, 300); // Kunci 5 Menit (300 detik)
             if ($request->wantsJson()) {
                 return response()->json(['message' => 'Kredensial tidak valid.'], 401);
             }
             return back()->with('error', 'Kredensial tidak valid.');
         }
+
+        \Illuminate\Support\Facades\RateLimiter::clear($throttleKey);
 
         // Jika request dari web browser (bukan API), gunakan session login standar Laravel
         if (!$request->wantsJson()) {
@@ -185,6 +200,21 @@ class AuthController extends Controller
         return response()->json(['message' => 'Logged out successfully.']);
     }
 
+    public function me(Request $request)
+    {
+        // Route ini ditujukan untuk memberikan data user terbaru via API
+        return response()->json([
+            'success' => true,
+            'user' => [
+                'id' => Auth::user()->id,
+                'name' => Auth::user()->name,
+                'role' => Auth::user()->role,
+                'email' => Auth::user()->email,
+                'phone' => Auth::user()->phone,
+            ]
+        ]);
+    }
+
     /**
      * Send password reset link. [SEDANG #8]
      */
@@ -278,6 +308,44 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Update user password data via API. [NEW]
+     */
+    public function updatePassword(Request $request)
+    {
+        try {
+            $user = \Tymon\JWTAuth\Facades\JWTAuth::parseToken()->authenticate();
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Sesi berakhir atau token tidak valid.'], 401);
+        }
+
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'User tidak ditemukan.'], 401);
+        }
+
+        $request->validate([
+            'old_password' => 'required',
+            'new_password' => 'required|min:8|confirmed',
+        ]);
+
+        if (!Hash::check($request->old_password, $user->password_hash)) {
+            return response()->json(['success' => false, 'message' => 'Password saat ini salah.'], 400);
+        }
+
+        try {
+            $user->password_hash = Hash::make($request->new_password);
+            $user->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Password berhasil diperbarui.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal memperbarui password.'], 500);
+        }
+    }
+
 
     /**
      * Change user password. [NEW]

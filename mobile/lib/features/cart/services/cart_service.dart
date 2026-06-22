@@ -30,7 +30,7 @@ class CartService {
       });
       return true;
     } catch (e) {
-      return false;
+      throw Exception("Dio Error: $e");
     }
   }
 

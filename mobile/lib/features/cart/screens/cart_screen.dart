@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import '../providers/cart_provider.dart';
+import '../../../core/constants/constants.dart';
 import '../../../core/theme/app_theme.dart';
 
 class CartScreen extends ConsumerWidget {
@@ -26,7 +28,7 @@ class CartScreen extends ConsumerWidget {
     final notifier = ref.read(cartProvider.notifier);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F4EB),
+      backgroundColor: const Color(0xFFF8EFDE),
       body: Stack(
         children: [
           Column(
@@ -58,7 +60,12 @@ class CartScreen extends ConsumerWidget {
                 child: state.isLoading 
                   ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
                   : state.items.isEmpty
-                    ? _buildEmptyState(context)
+                    ? (state.error != null 
+                        ? Center(child: Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Text("ERROR FETCHING CART:\n${state.error}", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                          ))
+                        : _buildEmptyState(context))
                     : ListView(
                         padding: const EdgeInsets.fromLTRB(20, 24, 20, 220),
                         children: [
@@ -89,7 +96,55 @@ class CartScreen extends ConsumerWidget {
                                     Text("${state.totalCount} item", style: GoogleFonts.inter(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w600)),
                                     const SizedBox(width: 10),
                                     GestureDetector(
-                                      onTap: () => notifier.removeCheckedItems(),
+                                      onTap: () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (ctx) => Dialog(
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                                            backgroundColor: Colors.white,
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(24.0),
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Container(
+                                                    width: 70, height: 70,
+                                                    decoration: const BoxDecoration(color: Color(0xFFFFEBEE), shape: BoxShape.circle),
+                                                    child: const Center(child: Icon(Icons.delete_sweep_outlined, color: Colors.red, size: 36)),
+                                                  ),
+                                                  const SizedBox(height: 16),
+                                                  Text("Hapus Pesanan?", style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 18, color: Colors.black)),
+                                                  const SizedBox(height: 8),
+                                                  Text("Yakin ingin menghapus item yang dipilih dari keranjang?", style: GoogleFonts.inter(color: Colors.grey[600], fontSize: 12), textAlign: TextAlign.center),
+                                                  const SizedBox(height: 24),
+                                                  Row(
+                                                    children: [
+                                                      Expanded(
+                                                        child: OutlinedButton(
+                                                          onPressed: () => Navigator.pop(ctx),
+                                                          style: OutlinedButton.styleFrom(foregroundColor: AppColors.primary, side: const BorderSide(color: AppColors.primary, width: 1.5), padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50))),
+                                                          child: const Text("Batal", style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 12),
+                                                      Expanded(
+                                                        child: ElevatedButton(
+                                                          onPressed: () {
+                                                            Navigator.pop(ctx);
+                                                            notifier.removeCheckedItems();
+                                                          },
+                                                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFC62828), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50))),
+                                                          child: const Text("Hapus", style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                                        ),
+                                                      ),
+                                                      ],
+                                                  )
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      },
                                       child: Text("Hapus", style: GoogleFonts.inter(color: Colors.red, fontSize: 12, fontWeight: FontWeight.w900)),
                                     ),
                                   ],
@@ -100,10 +155,78 @@ class CartScreen extends ConsumerWidget {
                           const SizedBox(height: 16),
 
                           // ITEMS
-                          ...state.items.map((item) => _CartItemCard(
-                            key: ValueKey(item.id),
-                            item: item, 
-                            asset: _getProductAsset(item.product?.name)
+                          ...state.items.map((item) => Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: Slidable(
+                              key: ValueKey(item.id),
+                              endActionPane: ActionPane(
+                                motion: const ScrollMotion(),
+                                extentRatio: 0.22,
+                                children: [
+                                  CustomSlidableAction(
+                                    onPressed: (context) {
+                                      showDialog(
+                                        context: context,
+                                        builder: (ctx) => Dialog(
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                                          backgroundColor: Colors.white,
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(24.0),
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Container(
+                                                  width: 70, height: 70,
+                                                  decoration: const BoxDecoration(color: Color(0xFFFFEBEE), shape: BoxShape.circle),
+                                                  child: const Center(child: Icon(Icons.delete_outline, color: Colors.red, size: 36)),
+                                                ),
+                                                const SizedBox(height: 16),
+                                                Text("Hapus Item?", style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 18, color: Colors.black)),
+                                                const SizedBox(height: 8),
+                                                Text("Yakin ingin menghapus item ini dari keranjang?", style: GoogleFonts.inter(color: Colors.grey[600], fontSize: 12), textAlign: TextAlign.center),
+                                                const SizedBox(height: 24),
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: OutlinedButton(
+                                                        onPressed: () => Navigator.pop(ctx),
+                                                        style: OutlinedButton.styleFrom(foregroundColor: AppColors.primary, side: const BorderSide(color: AppColors.primary, width: 1.5), padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50))),
+                                                        child: const Text("Batal", style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 12),
+                                                    Expanded(
+                                                      child: ElevatedButton(
+                                                        onPressed: () {
+                                                          Navigator.pop(ctx);
+                                                          notifier.removeItem(item.id);
+                                                        },
+                                                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFC62828), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50))),
+                                                        child: const Text("Hapus", style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                )
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    backgroundColor: const Color(0xFFC62828),
+                                    foregroundColor: Colors.white,
+                                    borderRadius: BorderRadius.circular(24),
+                                    child: const Icon(Icons.delete_outline, size: 32),
+                                  ),
+                                ],
+                              ),
+                              child: _CartItemCard(
+                                item: item, 
+                                asset: _getProductAsset(item.product?.name),
+                                // Hilangkan margin di CartItemCard karena sudah di-wrap Padding
+                                isSlidableComponent: true,
+                              ),
+                            ),
                           )),
                           
                           const SizedBox(height: 16),
@@ -136,38 +259,12 @@ class CartScreen extends ConsumerWidget {
             ],
           ),
 
-          // BOTTOM BAR - Only show checkout button if cart is not empty
+          // BOTTOM BAR - Checkout Button
           Positioned(
-            bottom: 40, left: 24, right: 24,
+            bottom: 25, left: 24, right: 24,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(22),
-                    boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 8))],
-                  ),
-                  child: Row(
-                    children: [
-                      Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.timer_outlined, color: Colors.white, size: 22)),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text("5 Pesanan Aktif", style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13)),
-                            Text("Pantau Status Pesananmu", style: GoogleFonts.inter(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600)),
-                          ],
-                        ),
-                      ),
-                      const Icon(Icons.chevron_right, color: Colors.white, size: 20),
-                    ],
-                  ),
-                ),
-                
                 if (state.items.isNotEmpty)
                   SizedBox(
                     width: double.infinity, height: 60,
@@ -233,24 +330,30 @@ class CartScreen extends ConsumerWidget {
 class _CartItemCard extends ConsumerWidget {
   final dynamic item;
   final String asset;
-  const _CartItemCard({super.key, required this.item, required this.asset});
+  final bool isSlidableComponent;
+  const _CartItemCard({super.key, required this.item, required this.asset, this.isSlidableComponent = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifier = ref.read(cartProvider.notifier);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: isSlidableComponent ? EdgeInsets.zero : const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.01), blurRadius: 10, offset: const Offset(0, 4))]),
+      decoration: BoxDecoration(
+        color: Colors.white, 
+        borderRadius: BorderRadius.circular(24), 
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.01), blurRadius: 10, offset: const Offset(0, 4))]
+      ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // CHECKBOX AREA (Large click area)
           InkWell(
             onTap: () => notifier.toggleCheck(item.id),
             borderRadius: BorderRadius.circular(8),
             child: Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.only(top: 12, right: 12, bottom: 12),
               child: Container(
                 width: 24, height: 24,
                 decoration: BoxDecoration(
@@ -262,75 +365,121 @@ class _CartItemCard extends ConsumerWidget {
               ),
             ),
           ),
-          const SizedBox(width: 6),
-          Container(
-            width: 70, height: 70,
-            decoration: BoxDecoration(color: const Color(0xFFF5EFE6), borderRadius: BorderRadius.circular(16)),
-            child: Padding(padding: const EdgeInsets.all(4.0), child: Image.asset(asset)),
-          ),
-          const SizedBox(width: 14),
+          
           Expanded(
-            child: Column(
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item.product?.name ?? "Produk", style: GoogleFonts.inter(fontWeight: FontWeight.w900, fontSize: 13, color: const Color(0xFF1A1A1A))),
-                
-                // EXTRAS & NOTE AREA (MANDATORY DISPLAY)
+                // LEFT COLUMN (IMAGE + EDIT BUTTON)
                 Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (item.selectedExtras.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4, bottom: 2),
-                        child: Text(
-                          "Topping: ${item.selectedExtras.join(", ")}", 
-                          style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFFBBAA99), fontWeight: FontWeight.w800)
+                    Container(
+                      width: 80, height: 80,
+                      decoration: BoxDecoration(color: const Color(0xFFF5EFE6), borderRadius: BorderRadius.circular(16)),
+                      clipBehavior: Clip.antiAlias,
+                      child: Padding(
+                        padding: const EdgeInsets.all(4.0),
+                        child: item.product?.imageUrl != null && item.product!.imageUrl!.isNotEmpty
+                            ? Image.network(
+                                AppConstants.baseUrl.replaceAll('/api/v1', '') + item.product!.imageUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (c, e, s) => Image.asset(asset, fit: BoxFit.cover),
+                              )
+                            : Image.asset(asset, fit: BoxFit.cover),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 32,
+                      width: 80,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                           if (item.product != null) {
+                             context.push('/product/${item.product!.id}', extra: item);
+                           }
+                        },
+                        icon: const Icon(Icons.edit, size: 12),
+                        label: Text("Edit", style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700)),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          foregroundColor: const Color(0xFF4D4D4D),
+                          side: BorderSide(color: Colors.grey.shade300),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
                         ),
                       ),
-
-                    if (item.note != null && item.note!.isNotEmpty)
-                      Container(
-                        margin: const EdgeInsets.only(top: 4),
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF1E9DA),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          "Catatan: ${item.note!}", 
-                          style: GoogleFonts.inter(fontSize: 10, fontStyle: FontStyle.italic, color: const Color(0xFF8B1A1A), fontWeight: FontWeight.w600),
-                          maxLines: 2, 
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
+                    ),
                   ],
                 ),
+                
+                const SizedBox(width: 16),
+                
+                // RIGHT COLUMN (DESCRIPTION + QUANTITY)
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(item.product?.name ?? "Produk", style: GoogleFonts.inter(fontWeight: FontWeight.w900, fontSize: 13, color: const Color(0xFF1A1A1A))),
+                      const SizedBox(height: 6),
+                      
+                      // EXTRAS & NOTE AREA 
+                      if (item.selectedExtras.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Text(
+                            "Topping: ${item.selectedExtras.join(", ")}", 
+                            style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFFBBAA99), fontWeight: FontWeight.w800)
+                          ),
+                        ),
 
-                const SizedBox(height: 4),
-                // UNIT PRICE (Base + Extras)
-                Text(
-                  "Rp ${item.subtotal ~/ item.quantity}", 
-                  style: GoogleFonts.inter(color: AppColors.primary, fontWeight: FontWeight.w900, fontSize: 15)
+                      if (item.note != null && item.note!.isNotEmpty)
+                        Container(
+                          margin: const EdgeInsets.only(top: 2, bottom: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1E9DA),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            "Catatan: ${item.note!}", 
+                            style: GoogleFonts.inter(fontSize: 10, fontStyle: FontStyle.italic, color: const Color(0xFF8B1A1A), fontWeight: FontWeight.w600),
+                            maxLines: 2, 
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+
+                      const SizedBox(height: 6),
+                      
+                      // UNIT PRICE 
+                      Text(
+                        "Rp ${item.subtotal ~/ item.quantity}", 
+                        style: GoogleFonts.inter(color: AppColors.primary, fontWeight: FontWeight.w900, fontSize: 13)
+                      ),
+                      
+                      const SizedBox(height: 12),
+                      
+                      // QUANTITY AREA
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          _qtyBtn(Icons.remove, const Color(0xFFF5EFE6), const Color(0xFF8B7A6A), () {
+                            notifier.updateQuantity(item.id, item.quantity - 1);
+                          }),
+                          Container(
+                            constraints: const BoxConstraints(minWidth: 36),
+                            alignment: Alignment.center,
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Text("${item.quantity}", style: GoogleFonts.inter(fontWeight: FontWeight.w900, fontSize: 15)),
+                          ),
+                          _qtyBtn(Icons.add, AppColors.primary, Colors.white, () {
+                            notifier.updateQuantity(item.id, item.quantity + 1);
+                          }),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-          ),
-          // QUANTITY AREA
-          Row(
-            children: [
-              _qtyBtn(Icons.remove, const Color(0xFFF5EFE6), const Color(0xFF8B7A6A), () {
-                notifier.updateQuantity(item.id, item.quantity - 1);
-              }),
-              Container(
-                constraints: const BoxConstraints(minWidth: 30),
-                alignment: Alignment.center,
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Text("${item.quantity}", style: GoogleFonts.inter(fontWeight: FontWeight.w900, fontSize: 15)),
-              ),
-              _qtyBtn(Icons.add, AppColors.primary, Colors.white, () {
-                notifier.updateQuantity(item.id, item.quantity + 1);
-              }),
-            ],
           ),
         ],
       ),
@@ -339,11 +488,11 @@ class _CartItemCard extends ConsumerWidget {
 
   Widget _qtyBtn(IconData icon, Color bg, Color ic, VoidCallback onTap) {
     return Container(
-      width: 40, height: 40,
+      width: 32, height: 32,
       decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
       child: IconButton(
         onPressed: onTap,
-        icon: Icon(icon, color: ic, size: 20),
+        icon: Icon(icon, color: ic, size: 16),
         padding: EdgeInsets.zero,
         constraints: const BoxConstraints(),
       ),

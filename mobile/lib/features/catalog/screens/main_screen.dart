@@ -7,6 +7,7 @@ import 'home_screen.dart';
 import 'favorites_screen.dart';
 import '../../auth/screens/profile_screen.dart';
 import '../../cart/providers/cart_provider.dart';
+import '../../cart/screens/cart_screen.dart';
 import '../../orders/providers/order_provider.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
@@ -19,9 +20,10 @@ class MainScreen extends ConsumerStatefulWidget {
 class _MainScreenState extends ConsumerState<MainScreen> {
   int _selectedIndex = 0;
 
-  // REMOVED CartScreen from here because it's a FULL SCREEN now (Image 1)
   final List<Widget> _pages = [
     const HomeScreen(),
+    const SizedBox.shrink(), // Cart is now a pushed route
+    const SizedBox.shrink(), // Favorites is now a pushed route
     const ProfileScreen(),
   ];
 
@@ -34,8 +36,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
-          // Mapping index for 2 pages (Home, Profile)
-          _selectedIndex == 0 ? const HomeScreen() : const ProfileScreen(),
+          // Mapping index for 4 pages
+          _pages[_selectedIndex],
           
           // GLOBAL STICKY ORDER BAR (Dynamic)
           ref.watch(activeOrdersProvider).when(
@@ -102,13 +104,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                   currentIndex: _selectedIndex,
                   onTap: (index) {
                     if (index == 1) {
-                      // FULL SCREEN NAVIGATION TO CART 
                       context.push('/cart');
                     } else if (index == 2) {
-                      // FULL SCREEN NAVIGATION TO FAVORITES
                       context.push('/favorites');
-                    } else if (index == 3) {
-                      setState(() => _selectedIndex = 3);
                     } else {
                       setState(() => _selectedIndex = index);
                     }
@@ -178,7 +176,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       builder: (context) => Container(
         padding: const EdgeInsets.all(24),
         decoration: const BoxDecoration(
-          color: Color(0xFFF9F4EB),
+          color: Color(0xFFF8EFDE),
           borderRadius: BorderRadius.only(topLeft: Radius.circular(30), topRight: Radius.circular(30)),
         ),
         child: Column(

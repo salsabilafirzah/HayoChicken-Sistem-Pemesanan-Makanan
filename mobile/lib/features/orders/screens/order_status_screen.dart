@@ -2,16 +2,55 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../services/order_service.dart';
 
-class OrderStatusScreen extends StatelessWidget {
+class OrderStatusScreen extends StatefulWidget {
   final String orderId;
 
   const OrderStatusScreen({super.key, required this.orderId});
 
   @override
+  State<OrderStatusScreen> createState() => _OrderStatusScreenState();
+}
+
+class _OrderStatusScreenState extends State<OrderStatusScreen> {
+  bool _isLoading = true;
+  Map<String, dynamic>? _order;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOrder();
+  }
+
+  Future<void> _loadOrder() async {
+    // Attempt to fetch from service using the orderId (order_number)
+    final orderObj = await OrderService().getOrderDetail(widget.orderId);
+    if (mounted) {
+      setState(() {
+        _order = orderObj;
+        _isLoading = false;
+      });
+    }
+  }
+
+  String _mapStatusDisplay(String? apiStatus) {
+    if (apiStatus == null) return "Memuat...";
+    switch (apiStatus) {
+      case 'PENDING_PAYMENT': return "Menunggu Pembayaran";
+      case 'PENDING_VERIFICATION': return "Verifikasi Pembayaran";
+      case 'PROCESSING': return "Sedang Dimasak";
+      case 'DELIVERING': return "Dalam Pengiriman";
+      case 'DONE': return "Pesanan Selesai";
+      case 'REJECTED': return "Pesanan Ditolak";
+      default: return apiStatus;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F4EB),
+      backgroundColor: const Color(0xFFF8EFDE),
       body: Column(
         children: [
           // HEADER
@@ -38,18 +77,22 @@ class OrderStatusScreen extends StatelessWidget {
           ),
 
           Expanded(
-            child: ListView(
+            child: _isLoading 
+              ? const Center(child: CircularProgressIndicator())
+              : _order == null 
+                  ? Center(child: Text("Gagal memuat detail pesanan", style: GoogleFonts.inter(color: Colors.grey))) 
+                  : ListView(
               padding: const EdgeInsets.all(24),
               children: [
                 // Info Card
                 _buildCard(
                   child: Column(
                     children: [
-                      _buildRow("ID Pesanan", orderId, isBold: true),
+                      _buildRow("ID Pesanan", _order!['order_number'] ?? widget.orderId, isBold: true),
                       const SizedBox(height: 12),
-                      _buildRow("Metode Bayar", "COD"),
+                      _buildRow("Metode Bayar", _order!['payment_method'] == 'QRIS_MANUAL' ? 'QRIS' : (_order!['payment_method'] ?? "-")),
                       const SizedBox(height: 12),
-                      _buildRow("Total", "Rp48.000", valueColor: AppColors.primary, isBold: true),
+                      _buildRow("Total", "Rp${_order!['total_amount']}", valueColor: AppColors.primary, isBold: true),
                       const SizedBox(height: 12),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -58,7 +101,7 @@ class OrderStatusScreen extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(color: const Color(0xFFFFF9EE), borderRadius: BorderRadius.circular(20)),
-                            child: Text("Pesanan Baru", style: GoogleFonts.inter(color: const Color(0xFFB8860B), fontSize: 11, fontWeight: FontWeight.w900)),
+                            child: Text(_mapStatusDisplay(_order!['status']), style: GoogleFonts.inter(color: const Color(0xFFB8860B), fontSize: 11, fontWeight: FontWeight.w900)),
                           ),
                         ],
                       ),
@@ -82,28 +125,41 @@ class OrderStatusScreen extends StatelessWidget {
                         isPast: true,
                         showLine: true,
                       ),
+                      if (_order!['payment_method'] == 'QRIS_MANUAL')
+                        _buildTimelineItem(
+                          icon: Icons.qr_code_scanner_rounded,
+                          color: (_order!['status'] == 'PROCESSING' || _order!['status'] == 'DELIVERING' || _order!['status'] == 'DONE') 
+                                  ? AppColors.primary 
+                                  : (_order!['status'] == 'PENDING_VERIFICATION' ? const Color(0xFFFFA500) : Colors.grey[300]!),
+                          title: "Verifikasi Pembayaran",
+                          subtitle: "Admin sedang memverifikasi pembayaran",
+                          isPast: _order!['status'] == 'PENDING_VERIFICATION' || _order!['status'] == 'PROCESSING' || _order!['status'] == 'DELIVERING' || _order!['status'] == 'DONE',
+                          showLine: true,
+                        ),
                       _buildTimelineItem(
                         icon: Icons.access_time_filled_rounded,
-                        color: const Color(0xFFFFA500),
+                        color: (_order!['status'] == 'DELIVERING' || _order!['status'] == 'DONE') 
+                                ? AppColors.primary 
+                                : (_order!['status'] == 'PROCESSING' ? const Color(0xFFFFA500) : Colors.grey[300]!),
                         title: "Sedang Dimasak",
                         subtitle: "Pesanan sedang disiapkan",
-                        isPast: true,
+                        isPast: _order!['status'] == 'PROCESSING' || _order!['status'] == 'DELIVERING' || _order!['status'] == 'DONE',
                         showLine: true,
                       ),
                       _buildTimelineItem(
                         icon: Icons.info_outline_rounded,
-                        color: Colors.grey[300]!,
+                        color: _order!['status'] == 'DONE' ? AppColors.primary : (_order!['status'] == 'DELIVERING' ? const Color(0xFFFFA500) : Colors.grey[300]!),
                         title: "Dalam Pengiriman",
                         subtitle: "Estimasi 15-20 menit",
-                        isPast: false,
+                        isPast: _order!['status'] == 'DELIVERING' || _order!['status'] == 'DONE',
                         showLine: true,
                       ),
                       _buildTimelineItem(
                         icon: Icons.info_outline_rounded,
-                        color: Colors.grey[300]!,
+                        color: _order!['status'] == 'DONE' ? AppColors.primary : Colors.grey[300]!,
                         title: "Pesanan Tiba",
                         subtitle: "Selamat menikmati pesananmu!",
-                        isPast: false,
+                        isPast: _order!['status'] == 'DONE',
                         showLine: false,
                       ),
                     ],
@@ -115,11 +171,11 @@ class OrderStatusScreen extends StatelessWidget {
                 _buildCard(
                   child: Column(
                     children: [
-                      _buildRow("Subtotal (3 item)", "Rp48.000"),
+                      _buildRow("Subtotal (${_order!['items']?.length ?? 1} item)", "Rp${_order!['total_amount']}"),
                       const SizedBox(height: 16),
                       const Divider(height: 1, color: Color(0xFFEEEEEE)),
                       const SizedBox(height: 16),
-                      _buildRow("Total", "Rp48.000", isBold: true, valueColor: const Color(0xFF8B1A1A), fontSize: 16),
+                      _buildRow("Total", "Rp${_order!['total_amount']}", isBold: true, valueColor: const Color(0xFF8B1A1A), fontSize: 16),
                     ],
                   ),
                 ),

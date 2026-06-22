@@ -1,0 +1,6 @@
+{
+    "product_id": 18,
+    "quantity": 1,
+    "selected_extras_snapshot": [],
+    "note": null
+}

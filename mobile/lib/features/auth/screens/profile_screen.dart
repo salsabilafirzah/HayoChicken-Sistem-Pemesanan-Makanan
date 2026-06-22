@@ -14,7 +14,7 @@ class ProfileScreen extends ConsumerWidget {
     final user = authState.user;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F4EB),
+      backgroundColor: const Color(0xFFF8EFDE),
       body: Column(
         children: [
           Container(
@@ -54,8 +54,6 @@ class ProfileScreen extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               children: [
                 _buildMenuCard(context, Icons.description_outlined, "Riwayat Pesanan", "/profile/history"),
-                const SizedBox(height: 16),
-                _buildMenuCard(context, Icons.location_on_outlined, "Alamat Tersimpan", "/profile/addresses"),
                 const SizedBox(height: 16),
                 _buildMenuCard(context, Icons.local_shipping_outlined, "Pesanan Aktif", "/profile/orders"),
                 const SizedBox(height: 16),

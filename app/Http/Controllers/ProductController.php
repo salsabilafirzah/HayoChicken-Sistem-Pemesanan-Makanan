@@ -15,7 +15,11 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Product::with('category')->where('is_available', true);
+        $query = Product::with('category');
+
+        if ($request->get('show_all') !== 'true') {
+            $query->where('is_available', true);
+        }
         
         // Filter Kategori
         if ($request->filled('category')) {

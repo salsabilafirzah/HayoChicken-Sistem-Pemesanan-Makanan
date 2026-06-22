@@ -43,111 +43,80 @@ class HayoChickenSeeder extends Seeder
             ['name' => 'Paket', 'slug' => 'paket', 'icon_name' => 'paket_combo', 'sort_order' => 2],
             ['name' => 'Cemilan', 'slug' => 'cemilan', 'icon_name' => 'cemilan-pastel', 'sort_order' => 3],
             ['name' => 'Minuman', 'slug' => 'minuman', 'icon_name' => 'lemon_tea', 'sort_order' => 4],
+            ['name' => 'Mie', 'slug' => 'mie', 'icon_name' => 'mie_jebew', 'sort_order' => 5],
         ];
 
+        $catMap = [];
         foreach ($categories as $cat) {
-            Category::create($cat);
+            $catMap[$cat['slug']] = Category::create($cat)->id;
         }
 
         // =====================================================================
         // SEED PRODUCTS
         // =====================================================================
-        $ayamCat = Category::where('slug', 'ayam')->first();
-        $paketCat = Category::where('slug', 'paket')->first();
-        $cemilanCat = Category::where('slug', 'cemilan')->first();
-        $minumanCat = Category::where('slug', 'minuman')->first();
-
         $products = [
-            [
-                'category_id' => $ayamCat->id,
-                'name' => 'Ayam Goreng Crispy',
-                'slug' => 'ayam-goreng-crispy',
-                'description' => 'Ayam pilihan digoreng bumbu rahasia. Crispy di luar, juicy di dalam!',
-                'base_price' => 12000,
-                'image_url' => '/assets/fried_chicken.png',
-                'is_available' => true,
-            ],
-            [
-                'category_id' => $paketCat->id,
-                'name' => 'Paket Nasi Ayam',
-                'slug' => 'paket-nasi-ayam',
-                'description' => '1 ayam crispy + nasi putih + teh manis hangat.',
-                'base_price' => 18000,
-                'image_url' => '/assets/paket_nasi_mie.png',
-                'is_available' => true,
-            ],
-            [
-                'category_id' => $cemilanCat->id,
-                'name' => 'Kentang Goreng',
-                'slug' => 'kentang-goreng',
-                'description' => 'Kentang goreng renyah, tersedia saus sambal & keju.',
-                'base_price' => 8000,
-                'image_url' => '/assets/rice_bowl.png', // Fallback
-                'is_available' => true,
-            ],
-            [
-                'category_id' => $minumanCat->id,
-                'name' => 'Es Teh Manis',
-                'slug' => 'es-teh-manis',
-                'description' => 'Teh manis dingin yang bikin seger sepanjang hari.',
-                'base_price' => 5000,
-                'image_url' => '/assets/lemon_tea.png',
-                'is_available' => true,
-            ],
+            // 1. Paket
+            ['cat' => 'paket', 'slug' => 'paket-ayam-geprek', 'name' => 'Paket Ayam Geprek', 'desc' => 'Ayam geprek pedas + Nasi Putih + Es Teh Manis', 'price' => 16000, 'img' => '/assets/paket_geprek.png', 'variants' => ['Sayap', 'Paha', 'Dada']],
+            ['cat' => 'paket', 'slug' => 'paket-nasgor', 'name' => 'Paket Nasi Goreng', 'desc' => 'Nasi goreng gurih lengkap dengan kerupuk', 'price' => 17000, 'img' => '/assets/paket_nasgor.png'],
+            ['cat' => 'paket', 'slug' => 'paket-katsu', 'name' => 'Paket Chicken Katsu', 'desc' => 'Chicken katsu dengan saus spesial + Nasi Putih', 'price' => 19000, 'img' => '/assets/paket_katsu.png'],
+            ['cat' => 'paket', 'slug' => 'paket-teriyaki', 'name' => 'Paket Teriyaki', 'desc' => 'Chicken teriyaki khas Jepang + Nasi', 'price' => 16000, 'img' => '/assets/paket_teriyaki.png'],
+            ['cat' => 'paket', 'slug' => 'paket-ayam-lalapan', 'name' => 'Paket Ayam Lalapan', 'desc' => 'Ayam goreng tradisional + Sambal + Nasi', 'price' => 16000, 'img' => '/assets/paket_lalapan.png', 'variants' => ['Sayap', 'Paha', 'Dada']],
+
+            // 2. Cemilan
+            ['cat' => 'cemilan', 'slug' => 'kentang-goreng', 'name' => 'Kentang Goreng', 'desc' => 'Kentang goreng renyah berkualitas', 'price' => 11000, 'img' => '/assets/kentang.png'],
+            ['cat' => 'cemilan', 'slug' => 'nugget', 'name' => 'Nugget', 'desc' => 'Nugget ayam premium digoreng kering', 'price' => 11000, 'img' => '/assets/nugget.png'],
+            ['cat' => 'cemilan', 'slug' => 'sosis', 'name' => 'Sosis', 'desc' => 'Sosis bakar/goreng dengan saus pilihan', 'price' => 11000, 'img' => '/assets/sosis.png'],
+            ['cat' => 'cemilan', 'slug' => 'cireng', 'name' => 'Cireng', 'desc' => 'Cireng isi kenyal gurih bumbu pedas', 'price' => 11000, 'img' => '/assets/cireng.png'],
+            ['cat' => 'cemilan', 'slug' => 'otak-otak', 'name' => 'Otak-otak', 'desc' => 'Otak-otak ikan digoreng garing pinggir jalan', 'price' => 11000, 'img' => '/assets/otak_otak.png'],
+
+            // 3. Minuman
+            ['cat' => 'minuman', 'slug' => 'es-teh-manis', 'name' => 'Es Teh Manis', 'desc' => 'Teh kental lokal, manis dan dingin', 'price' => 3000, 'img' => '/assets/esteh.png'],
+            ['cat' => 'minuman', 'slug' => 'es-teh-lemon', 'name' => 'Es Teh Lemon', 'desc' => 'Perpaduan teh dan perasan lemon segar', 'price' => 5000, 'img' => '/assets/eslemon.png'],
+            ['cat' => 'minuman', 'slug' => 'jus-mangga', 'name' => 'Jus Mangga', 'desc' => 'Jus mangga asli tebal serat vitamin C', 'price' => 9000, 'img' => '/assets/jus_mangga.png'],
+            ['cat' => 'minuman', 'slug' => 'es-jeruk', 'name' => 'Es Jeruk', 'desc' => 'Es jeruk peras penghilang dahaga', 'price' => 6000, 'img' => '/assets/esjeruk.png'],
+            ['cat' => 'minuman', 'slug' => 'teh-hangat', 'name' => 'Teh Hangat', 'desc' => 'Teh panas untuk menghangatkan malammu', 'price' => 2000, 'img' => '/assets/teh_hangat.png'],
+
+            // 4. Ayam
+            ['cat' => 'ayam', 'slug' => 'ayam-geprek', 'name' => 'Ayam Geprek', 'desc' => 'Ayam pedas dihancurkan dengan ulekan meresap', 'price' => 8000, 'img' => '/assets/ayam_geprek.png', 'variants' => ['Sayap', 'Paha', 'Dada']],
+            ['cat' => 'ayam', 'slug' => 'ayam-krispi', 'name' => 'Ayam Krispi', 'desc' => 'Ayam original berlapis tepung renyah', 'price' => 7000, 'img' => '/assets/ayam_krispi.png', 'variants' => ['Sayap', 'Paha', 'Dada']],
+            ['cat' => 'ayam', 'slug' => 'ayam-katsu', 'name' => 'Ayam Katsu', 'desc' => 'Fillet dada ayam goreng baluran tepung katsu', 'price' => 9000, 'img' => '/assets/ayam_katsu.png'],
+            ['cat' => 'ayam', 'slug' => 'ayam-lalapan', 'name' => 'Ayam Lalapan', 'desc' => 'Ayam goreng kaya rempah khas tradisional', 'price' => 7000, 'img' => '/assets/ayam_lalapan.png'],
+
+            // 5. Mie
+            ['cat' => 'mie', 'slug' => 'mie-kuah', 'name' => 'Mie Kuah', 'desc' => 'Mie kuah kaldu hangat segar plus telur', 'price' => 13000, 'img' => '/assets/mie_kuah.png'],
+            ['cat' => 'mie', 'slug' => 'mie-goreng', 'name' => 'Mie Goreng', 'desc' => 'Mie goreng bumbu kecap spesial komplit', 'price' => 14000, 'img' => '/assets/mie_goreng.png'],
+            ['cat' => 'mie', 'slug' => 'mie-jebew', 'name' => 'Mie Jebew', 'desc' => 'Mie pedas viral dengan topping saus lumer', 'price' => 16000, 'img' => '/assets/mie_jebew.png'],
         ];
 
-        foreach ($products as $product) {
-            Product::create($product);
+        foreach ($products as $p) {
+            $created = Product::create([
+                'category_id' => $catMap[$p['cat']],
+                'name' => $p['name'],
+                'slug' => $p['slug'],
+                'description' => $p['desc'],
+                'base_price' => $p['price'],
+                'image_url' => $p['img'],
+                'is_available' => true,
+            ]);
+
+            $sortO = 1;
+            // Add forced variants first
+            if (isset($p['variants'])) {
+                foreach ($p['variants'] as $v) {
+                    ProductExtra::create(['product_id' => $created->id, 'name' => "Bagian: $v", 'additional_price' => 0, 'is_available' => 1, 'sort_order' => $sortO++]);
+                }
+            }
+
+            // Universal Extras based on category
+            if ($p['cat'] === 'paket' || $p['cat'] === 'ayam' || $p['cat'] === 'mie') {
+                ProductExtra::create(['product_id' => $created->id, 'name' => 'Ekstra Nasi Putih', 'additional_price' => 4500, 'is_available' => 1, 'sort_order' => $sortO++]);
+                ProductExtra::create(['product_id' => $created->id, 'name' => 'Telur Ceplok', 'additional_price' => 4000, 'is_available' => 1, 'sort_order' => $sortO++]);
+                ProductExtra::create(['product_id' => $created->id, 'name' => 'Saus Tambahan', 'additional_price' => 2000, 'is_available' => 1, 'sort_order' => $sortO++]);
+            }
+            if ($p['cat'] === 'cemilan') {
+                ProductExtra::create(['product_id' => $created->id, 'name' => 'Saus Keju Ekstra', 'additional_price' => 3000, 'is_available' => 1, 'sort_order' => $sortO++]);
+                ProductExtra::create(['product_id' => $created->id, 'name' => 'Saus Sambal Ekstra', 'additional_price' => 1500, 'is_available' => 1, 'sort_order' => $sortO++]);
+            }
         }
-
-        // 4. Seed Product Extras
-        $product1 = Product::where('slug', 'ayam-goreng-crispy')->first();
-        ProductExtra::create([
-            'product_id' => $product1->id,
-            'name' => 'Nasi Putih',
-            'additional_price' => 4000,
-            'is_available' => 1,
-            'sort_order' => 1,
-        ]);
-
-        ProductExtra::create([
-            'product_id' => $product1->id,
-            'name' => 'Saus Ekstra',
-            'additional_price' => 2000,
-            'is_available' => 1,
-            'sort_order' => 2,
-        ]);
-
-        // 5. Seed Raw Materials
-        $rawMaterials = [
-            ['name' => 'Daging Ayam Segar', 'unit' => 'kg', 'current_stock' => 8.5, 'minimum_threshold' => 5.0],
-            ['name' => 'Tepung Bumbu Crispy', 'unit' => 'kg', 'current_stock' => 3.2, 'minimum_threshold' => 2.0],
-            ['name' => 'Minyak Goreng', 'unit' => 'liter', 'current_stock' => 12.0, 'minimum_threshold' => 5.0],
-            ['name' => 'Nasi Putih (Beras)', 'unit' => 'kg', 'current_stock' => 15.0, 'minimum_threshold' => 8.0],
-        ];
-
-        foreach ($rawMaterials as $rm) {
-            RawMaterial::create($rm);
-        }
-
-        // 6. Seed BOM (Bill of Materials)
-        $rmAyam = RawMaterial::where('name', 'Daging Ayam Segar')->first();
-        $rmTepung = RawMaterial::where('name', 'Tepung Bumbu Crispy')->first();
-        $rmMinyak = RawMaterial::where('name', 'Minyak Goreng')->first();
-        $rmBeras = RawMaterial::where('name', 'Nasi Putih (Beras)')->first();
-
-        $ayamCrispy = Product::where('slug', 'ayam-goreng-crispy')->first();
-        $paketAyam = Product::where('slug', 'paket-nasi-ayam')->first();
-
-        // Ayam Goreng Crispy needs: 0.25kg ayam, 0.05kg tepung, 0.1L minyak
-        MenuBom::create(['product_id' => $ayamCrispy->id, 'raw_material_id' => $rmAyam->id, 'quantity_needed' => 0.25]);
-        MenuBom::create(['product_id' => $ayamCrispy->id, 'raw_material_id' => $rmTepung->id, 'quantity_needed' => 0.05]);
-        MenuBom::create(['product_id' => $ayamCrispy->id, 'raw_material_id' => $rmMinyak->id, 'quantity_needed' => 0.1]);
-
-        // Paket Ayam needs: same + 0.15kg beras
-        MenuBom::create(['product_id' => $paketAyam->id, 'raw_material_id' => $rmAyam->id, 'quantity_needed' => 0.25]);
-        MenuBom::create(['product_id' => $paketAyam->id, 'raw_material_id' => $rmTepung->id, 'quantity_needed' => 0.05]);
-        MenuBom::create(['product_id' => $paketAyam->id, 'raw_material_id' => $rmMinyak->id, 'quantity_needed' => 0.1]);
-        MenuBom::create(['product_id' => $paketAyam->id, 'raw_material_id' => $rmBeras->id, 'quantity_needed' => 0.15]);
     }
 }

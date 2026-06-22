@@ -23,7 +23,8 @@ class _SellerMainScreenState extends State<SellerMainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F4EB),
+      backgroundColor: const Color(0xFFF8EFDE),
+      extendBody: true,
       body: IndexedStack(
         index: _currentIndex,
         children: _pages,

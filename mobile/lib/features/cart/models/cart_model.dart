@@ -46,12 +46,12 @@ class CartItemModel {
 
   factory CartItemModel.fromJson(Map<String, dynamic> json) {
     return CartItemModel(
-      id: json['id'],
-      userId: json['user_id'],
-      productId: json['product_id'],
-      quantity: json['quantity'] is String ? int.parse(json['quantity']) : json['quantity'],
+      id: int.tryParse(json['id']?.toString() ?? '0') ?? 0,
+      userId: int.tryParse(json['user_id']?.toString() ?? '0') ?? 0,
+      productId: int.tryParse(json['product_id']?.toString() ?? '0') ?? 0,
+      quantity: int.tryParse(json['quantity']?.toString() ?? '0') ?? 0,
       selectedExtras: _parseExtras(json['extras'] ?? json['selected_extras_snapshot']),
-      isChecked: json['is_checked'] == 1 || json['is_checked'] == true,
+      isChecked: json['is_checked'] == 1 || json['is_checked'] == true || json['is_checked'] == '1',
       note: json['note'],
       product: json['product'] != null ? ProductModel.fromJson(json['product']) : null,
     );

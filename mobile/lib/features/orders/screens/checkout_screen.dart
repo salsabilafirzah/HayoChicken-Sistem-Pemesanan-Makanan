@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -41,7 +42,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     final cartState = ref.watch(cartProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F4EB),
+      backgroundColor: const Color(0xFFF8EFDE),
       body: Stack(
         children: [
           Column(
@@ -99,10 +100,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                             icon: Icons.qr_code_scanner_rounded,
                             title: "QRIS (Transfer Manual)",
                             subtitle: "Scan & unggah bukti transfer",
-                            value: "QRIS",
+                            value: "QRIS_MANUAL",
                           ),
                           
-                          if (_selectedMethod == "QRIS") ...[
+                          if (_selectedMethod == "QRIS_MANUAL") ...[
                             const SizedBox(height: 16),
                             Container(
                               padding: const EdgeInsets.all(12),
@@ -136,22 +137,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(12),
-                                  child: Image.network(
-                                    "http://192.168.0.108/HayoChicken_App/public/img/qris_toko.jpg", // Real device link via LAN IP
+                                  child: Image.asset(
+                                    'assets/images/qris_toko.jpg',
                                     width: 250, height: 320, 
                                     fit: BoxFit.contain,
-                                    loadingBuilder: (context, child, loadingProgress) {
-                                      if (loadingProgress == null) return child;
-                                      return Container(width: 250, height: 320, color: Colors.grey[50], child: const Center(child: CircularProgressIndicator(color: AppColors.primary)));
-                                    },
-                                    errorBuilder: (context, error, stackTrace) => Image.network(
-                                      "http://10.0.2.2/HayoChicken_App/public/img/qris_toko.jpg", // Fallback for emulator
-                                      width: 250, height: 320,
-                                      fit: BoxFit.contain,
-                                      errorBuilder: (context, error, stackTrace) => Container(
-                                        width: 250, height: 320, color: Colors.grey[100],
-                                        child: const Icon(Icons.qr_code_2, size: 100, color: AppColors.primary)
-                                      ),
+                                    errorBuilder: (context, error, stackTrace) => Container(
+                                      width: 250, height: 320, color: Colors.grey[100],
+                                      child: const Icon(Icons.qr_code_2, size: 100, color: AppColors.primary)
                                     ),
                                   ),
                                 ),
@@ -169,17 +161,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                                   );
                                   
                                   try {
-                                    String imageUrl = "http://192.168.0.108/HayoChicken_App/public/img/qris_toko.jpg";
-                                    var response = await Dio().get(
-                                      imageUrl,
-                                      options: Options(responseType: ResponseType.bytes),
-                                    );
+                                    final byteData = await rootBundle.load('assets/images/qris_toko.jpg');
                                     
                                     // Save to temp file because GAL needs a file path
                                     final tempDir = await getTemporaryDirectory();
                                     final tempPath = "${tempDir.path}/qris_hayochicken_${DateTime.now().millisecondsSinceEpoch}.jpg";
                                     final file = File(tempPath);
-                                    await file.writeAsBytes(response.data);
+                                    await file.writeAsBytes(byteData.buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
 
                                     await Gal.putImage(tempPath);
                                     
@@ -322,7 +310,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 20),
         decoration: BoxDecoration(
-          color: const Color(0xFFF9F4EB).withOpacity(0.5),
+          color: const Color(0xFFF8EFDE).withOpacity(0.5),
           borderRadius: BorderRadius.circular(16),
         ),
         child: CustomPaint(
@@ -336,9 +324,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 const SizedBox(width: 10),
                 Flexible(
                   child: Text(
-                    _isProofUploaded ? "Terpilih: ${_proofImage!.name}" : "Pilih Bukti Transfer (JPG/PNG, maks 2MB)", 
-                    style: GoogleFonts.inter(color: const Color(0xFF8B1A1A), fontWeight: FontWeight.w800, fontSize: 13),
-                    overflow: TextOverflow.ellipsis,
+                    _isProofUploaded ? "Terlampir: ${_proofImage!.name}" : "Unggah Bukti Transfer (Maks 2MB)", 
+                    style: GoogleFonts.inter(color: const Color(0xFF8B1A1A), fontWeight: FontWeight.w800, fontSize: 12),
+                    maxLines: 2,
+                    textAlign: TextAlign.center,
                   ),
                 ),
               ],
@@ -381,9 +370,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: const Color(0xFFEEE5D8),
+        color: const Color(0xFFF9F9F9),
         borderRadius: BorderRadius.circular(50),
-        border: hasError ? Border.all(color: AppColors.primary, width: 2.0) : Border.all(color: Colors.transparent, width: 2.0),
+        border: hasError ? Border.all(color: AppColors.primary, width: 2.0) : Border.all(color: const Color(0xFFF0F0F0), width: 1.5),
       ),
       child: TextField(
         controller: controller,
@@ -392,10 +381,14 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           if (_addressError != null) setState(() => _addressError = null);
         },
         decoration: InputDecoration(
+          filled: false,
+          fillColor: Colors.transparent,
           hintText: hint,
           hintStyle: GoogleFonts.inter(color: const Color(0xFFBBAA99).withOpacity(0.6), fontSize: 14, fontWeight: FontWeight.w500),
           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
           border: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          enabledBorder: InputBorder.none,
         ),
       ),
     );
@@ -438,7 +431,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   void _handlePlaceOrder() async {
     setState(() {
       _addressError = _addressController.text.trim().isEmpty ? "Alamat wajib diisi" : null;
-      _proofError = (_selectedMethod == "QRIS" && !_isProofUploaded) ? "Bukti transfer wajib diunggah untuk pembayaran QRIS" : null;
+      _proofError = (_selectedMethod == "QRIS_MANUAL" && !_isProofUploaded) ? "Bukti transfer wajib diunggah untuk pembayaran QRIS" : null;
     });
 
     if (_addressError != null || _proofError != null) return;
@@ -454,13 +447,15 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       final orderService = OrderService();
       MultipartFile? receipt;
       
-      if (_selectedMethod == "QRIS" && _proofImage != null) {
-        receipt = await MultipartFile.fromFile(_proofImage!.path, filename: _proofImage!.name);
+      if (_selectedMethod == "QRIS_MANUAL" && _proofImage != null) {
+        receipt = await MultipartFile.fromFile(
+          _proofImage!.path,
+          filename: _proofImage!.path.split('/').last,
+        );
       }
-
       final result = await orderService.createOrder(
         address: "${_addressController.text} (${_patokanController.text})",
-        paymentMethod: _selectedMethod == "QRIS" ? "QRIS_MANUAL" : _selectedMethod,
+        paymentMethod: _selectedMethod,
         receiptFile: receipt,
       );
 
@@ -468,10 +463,14 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       Navigator.pop(context); // Close loading
 
       if (result['success'] == true) {
-        final orderData = result['data'];
-        final orderNumber = orderData?['order_number'] ?? "#HC-${DateTime.now().millisecondsSinceEpoch}";
+        final rootData = result['data']; // This is the full JSON response body
+        final orderObj = rootData?['data']; // This is the $order Eloquent model
+        final orderNumber = rootData?['order_number'] ?? "#HC-${DateTime.now().millisecondsSinceEpoch}";
         
-        context.go('/order-success', extra: orderNumber);
+        context.go('/order-success', extra: {
+          'order_number': orderNumber,
+          'total_amount': orderObj?['total_amount']?.toString() ?? "0",
+        });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(result['message'] ?? "Gagal membuat pesanan"), backgroundColor: Colors.red)

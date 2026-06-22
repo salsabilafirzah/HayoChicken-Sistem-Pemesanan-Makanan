@@ -5,13 +5,12 @@ class ProductExtraModel {
 
   ProductExtraModel({required this.id, required this.name, required this.additionalPrice});
 
-  factory ProductExtraModel.fromJson(Map<String, dynamic> json) {
+  factory ProductExtraModel.fromJson(Map<dynamic, dynamic> jsonFallback) {
+    final json = Map<String, dynamic>.from(jsonFallback);
     return ProductExtraModel(
-      id: json['id'],
-      name: json['name'],
-      additionalPrice: json['additional_price'] is String 
-          ? int.parse(json['additional_price']) 
-          : json['additional_price'],
+      id: int.tryParse(json['id']?.toString() ?? '0') ?? 0,
+      name: json['name']?.toString() ?? '',
+      additionalPrice: int.tryParse(json['additional_price']?.toString() ?? '0') ?? 0,
     );
   }
 }
@@ -39,17 +38,15 @@ class ProductModel {
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
     return ProductModel(
-      id: json['id'],
-      name: json['name'],
-      description: json['description'],
-      basePrice: json['base_price'] is String 
-          ? int.parse(json['base_price']) 
-          : json['base_price'],
-      imageUrl: json['product_image_url'],
-      isAvailable: json['is_available'] == 1 || json['is_available'] == true,
-      categoryId: json['category_id'],
-      extras: (json['product_extras'] as List? ?? [])
-          .map((e) => ProductExtraModel.fromJson(e))
+      id: int.tryParse(json['id']?.toString() ?? '0') ?? 0,
+      name: json['name']?.toString() ?? '',
+      description: json['description']?.toString(),
+      basePrice: int.tryParse(json['base_price']?.toString() ?? '0') ?? 0,
+      imageUrl: (json['product_image_url'] ?? json['image_url'])?.toString(),
+      isAvailable: json['is_available'] == 1 || json['is_available'] == true || json['is_available'] == '1',
+      categoryId: int.tryParse(json['category_id']?.toString() ?? '0') ?? 0,
+      extras: (json['product_extras'] as List? ?? json['extras'] as List? ?? [])
+          .map((e) => ProductExtraModel.fromJson(Map<String, dynamic>.from(e as Map)))
           .toList(),
     );
   }

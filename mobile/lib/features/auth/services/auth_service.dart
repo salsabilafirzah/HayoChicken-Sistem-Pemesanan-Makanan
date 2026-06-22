@@ -21,11 +21,14 @@ class AuthService {
         await _storage.write(key: AppConstants.tokenKey, value: data['access_token']);
         await _storage.write(key: AppConstants.refreshTokenKey, value: data['refresh_token']);
         await _storage.write(key: AppConstants.userRoleKey, value: user.role);
+        ApiService.setToken(data['access_token']);
         return {'success': true, 'user': user};
       }
       return {'success': false, 'message': 'Login gagal'};
     } on DioException catch (e) {
-      return {'success': false, 'message': e.response?.data['message'] ?? 'Terjadi kesalahan sistem'};
+      return {'success': false, 'message': e.response?.data['message'] ?? 'Error: ${e.message}'};
+    } catch (e) {
+      return {'success': false, 'message': 'Unknown Error: $e'};
     }
   }
 
@@ -50,7 +53,21 @@ class AuthService {
       }
       return {'success': false, 'message': 'Registrasi gagal'};
     } on DioException catch (e) {
-      return {'success': false, 'message': e.response?.data['message'] ?? 'Terjadi kesalahan'};
+      return {'success': false, 'message': e.response?.data['message'] ?? 'Error: ${e.message}'};
+    } catch (e) {
+      return {'success': false, 'message': 'Unknown Error: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchMe() async {
+    try {
+      final response = await _api.get('/auth/me');
+      if (response.statusCode == 200) {
+        return {'success': true, 'user': UserModel.fromJson(response.data['user'])};
+      }
+      return {'success': false};
+    } catch (e) {
+      return {'success': false};
     }
   }
 
@@ -73,6 +90,23 @@ class AuthService {
       return {'success': false, 'message': 'Gagal memperbarui profil'};
     } on DioException catch (e) {
       return {'success': false, 'message': e.response?.data['message'] ?? 'Gagal menghubungi server'};
+    }
+  }
+
+  Future<Map<String, dynamic>> updatePassword({
+    required String oldPassword,
+    required String newPassword,
+    required String newPasswordConfirm,
+  }) async {
+    try {
+      final response = await _api.patch('/auth/password', data: {
+        'old_password': oldPassword,
+        'new_password': newPassword,
+        'new_password_confirmation': newPasswordConfirm,
+      });
+      return {'success': true, 'message': response.data['message'] ?? 'Password berhasil diupdate'};
+    } on DioException catch (e) {
+      return {'success': false, 'message': e.response?.data['message'] ?? 'Gagal mengubah password'};
     }
   }
 }

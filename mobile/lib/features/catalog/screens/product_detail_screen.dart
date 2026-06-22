@@ -5,13 +5,18 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/product_provider.dart';
 import '../../cart/providers/cart_provider.dart';
+import '../../cart/models/cart_model.dart';
 import '../models/product_model.dart';
 import '../services/product_service.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/constants/constants.dart';
 
 class ProductDetailScreen extends ConsumerStatefulWidget {
   final int productId;
-  const ProductDetailScreen({super.key, required this.productId});
+  final CartItemModel? editingCartItem;
+  final bool fromFavorites;
+  
+  const ProductDetailScreen({super.key, required this.productId, this.editingCartItem, this.fromFavorites = false});
 
   @override
   ConsumerState<ProductDetailScreen> createState() => _ProductDetailScreenState();
@@ -27,6 +32,17 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   @override
   void initState() {
     super.initState();
+    
+    if (widget.editingCartItem != null) {
+      _quantity = widget.editingCartItem!.quantity;
+      if (widget.editingCartItem!.note != null) {
+        _noteController.text = widget.editingCartItem!.note!;
+      }
+      for (int i = 0; i < _quantity; i++) {
+        _selectedExtrasPerItem[i] = List.from(widget.editingCartItem!.selectedExtras);
+      }
+    }
+    
     _loadProduct();
   }
 
@@ -82,6 +98,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
        }
     }
 
+    if (widget.editingCartItem != null) {
+       await ref.read(cartProvider.notifier).removeItem(widget.editingCartItem!.id);
+    }
+
     // Process each unique group as a separate cart addition
     for (var key in uniqueConfigurations.keys) {
       await ref.read(cartProvider.notifier).addToCart(
@@ -93,7 +113,11 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     }
 
     if (mounted) {
-      context.push('/cart');
+      if (widget.fromFavorites) {
+        context.pushReplacement('/cart');
+      } else {
+        context.pop();
+      }
     }
   }
 
@@ -110,14 +134,14 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isInitLoading) return const Scaffold(backgroundColor: Color(0xFFF9F4EB), body: Center(child: CircularProgressIndicator(color: AppColors.primary)));
+    if (_isInitLoading) return const Scaffold(backgroundColor: Color(0xFFF8EFDE), body: Center(child: CircularProgressIndicator(color: AppColors.primary)));
     if (_product == null) return const Scaffold(body: Center(child: Text("Produk tidak ditemukan")));
 
     final productState = ref.watch(productProvider);
     final isFavorite = productState.favoriteIds.contains(_product!.id);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F4EB),
+      backgroundColor: const Color(0xFFF8EFDE),
       body: Stack(
         children: [
           SingleChildScrollView(
@@ -139,14 +163,14 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                       const SizedBox(height: 24),
                       Row(
                         children: [
-                          _buildQtyButton(Icons.remove, () {
+                          _buildQtyCircleButton(Icons.remove, const Color(0xFFD8D2CA), const Color(0xFF1A1A1A), () {
                             if (_quantity > 1) setState(() => _quantity--);
                           }),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 20),
                             child: Text("$_quantity", style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w900)),
                           ),
-                          _buildQtyButton(Icons.add, () {
+                          _buildQtyCircleButton(Icons.add, const Color(0xFF9D272B), Colors.white, () {
                             setState(() {
                               _quantity++;
                               if (!_selectedExtrasPerItem.containsKey(_quantity - 1)) {
@@ -209,25 +233,23 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
               ],
             ),
           ),
-          Positioned(
-            left: 20, right: 20, bottom: 20,
-            child: Container(
-              decoration: BoxDecoration(boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10))]),
+          if (MediaQuery.of(context).viewInsets.bottom == 0)
+            Positioned(
+              left: 20, right: 20, bottom: 20,
+              child: Container(
+                decoration: BoxDecoration(boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10))]),
               child: SizedBox(
                 width: double.infinity, height: 60,
                 child: ElevatedButton(
                   onPressed: _handleAddToCart,
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), elevation: 0),
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF9D272B), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)), elevation: 0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text("Tambah ke Keranjang", style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white)),
-                      const SizedBox(width: 8),
-                      const Text("|", style: TextStyle(color: Colors.white24)),
-                      const SizedBox(width: 8),
+                      Text("Tambah ke Keranjang - ", style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white)),
                       AnimatedSwitcher(
                         duration: const Duration(milliseconds: 300),
-                        transitionBuilder: (Widget child, Animation<double> animation) => FadeTransition(opacity: animation, child: ScaleTransition(scale: animation, child: child)),
+                        transitionBuilder: (Widget child, Animation<double> animation) => FadeTransition(opacity: animation, child: child),
                         child: Text("Rp${_totalPrice.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}",
                           key: ValueKey<int>(_totalPrice),
                           style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w900, color: Colors.white)),
@@ -243,14 +265,14 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween, 
               children: [
-                _buildCircleNav(Icons.chevron_left, () => context.pop()), 
+                _buildCircleNav(Icons.chevron_left, () => context.pop(), color: Colors.white.withOpacity(0.35), iconColor: Colors.white), 
                 _buildCircleNav(
                   isFavorite ? Icons.favorite : Icons.favorite_border, 
                   () {
                     ref.read(productProvider.notifier).toggleFavorite(_product!.id);
                     context.push('/favorites');
                   },
-                  color: isFavorite ? Colors.white : Colors.white.withOpacity(0.2),
+                  color: isFavorite ? Colors.white : Colors.white.withOpacity(0.35),
                   iconColor: isFavorite ? AppColors.primary : Colors.white,
                 )
               ]
@@ -264,76 +286,120 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   Widget _buildExtrasCard(int itemIndex) {
     if (_product == null || _product!.extras.isEmpty) return const SizedBox.shrink();
     
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))]
-      ),
-      child: Column(
-        children: _product!.extras.asMap().entries.map((entry) {
-          final extraIndex = entry.key;
-          final extra = entry.value;
-          final isSelected = _selectedExtrasPerItem[itemIndex]?.contains(extra.name) ?? false;
-          final isLast = extraIndex == _product!.extras.length - 1;
+    return Column(
+      children: _product!.extras.asMap().entries.map((entry) {
+        final extraIndex = entry.key;
+        final extra = entry.value;
+        final isSelected = _selectedExtrasPerItem[itemIndex]?.contains(extra.name) ?? false;
+        final isLast = extraIndex == _product!.extras.length - 1;
 
-          return Column(
-            children: [
-              GestureDetector(
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  setState(() {
-                    if (!_selectedExtrasPerItem.containsKey(itemIndex)) {
-                      _selectedExtrasPerItem[itemIndex] = [];
-                    }
-                    if (isSelected) {
-                      _selectedExtrasPerItem[itemIndex]!.remove(extra.name);
-                    } else {
-                      _selectedExtrasPerItem[itemIndex]!.add(extra.name);
-                    }
-                  });
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                  color: Colors.transparent,
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 24, height: 24,
-                        decoration: BoxDecoration(
-                          color: isSelected ? AppColors.primary : Colors.transparent,
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: isSelected ? AppColors.primary : Colors.grey.withOpacity(0.3), width: 2),
-                        ),
-                        child: isSelected ? const Icon(Icons.check, size: 16, color: Colors.white) : null,
+        return Column(
+          children: [
+            GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                setState(() {
+                  if (!_selectedExtrasPerItem.containsKey(itemIndex)) {
+                    _selectedExtrasPerItem[itemIndex] = [];
+                  }
+                  if (isSelected) {
+                    _selectedExtrasPerItem[itemIndex]!.remove(extra.name);
+                  } else {
+                    _selectedExtrasPerItem[itemIndex]!.add(extra.name);
+                  }
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 14),
+                color: Colors.transparent,
+                child: Row(
+                  children: [
+                    Container(
+                      width: 20, height: 20,
+                      decoration: BoxDecoration(
+                        color: isSelected ? const Color(0xFF9D272B) : Colors.transparent,
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: isSelected ? const Color(0xFF9D272B) : Colors.grey.withOpacity(0.3), width: 1.5),
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Text(extra.name, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF4D4D4D))),
-                      ),
-                      Text("+Rp${extra.additionalPrice.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}", 
-                        style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.primary)),
-                    ],
-                  ),
+                      child: isSelected ? const Icon(Icons.check, size: 14, color: Colors.white) : null,
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Text(extra.name, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF2D2D2D))),
+                    ),
+                    Text("+Rp${extra.additionalPrice.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}", 
+                      style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey)),
+                  ],
                 ),
               ),
-              if (!isLast) Divider(height: 1, thickness: 1, color: Colors.grey.withOpacity(0.08), indent: 16, endIndent: 16),
-            ],
-          );
-        }).toList(),
-      ),
+            ),
+            if (!isLast) Divider(height: 1, thickness: 1, color: Colors.grey.withOpacity(0.15)),
+          ],
+        );
+      }).toList(),
     );
   }
 
   Widget _buildHeroHeader() {
-    return Container(
-      width: double.infinity, height: 350,
-      decoration: const BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.only(bottomLeft: Radius.circular(50), bottomRight: Radius.circular(50))),
-      child: Stack(alignment: Alignment.center, children: [_buildRing(200, Colors.white.withOpacity(0.05)), _buildRing(260, Colors.white.withOpacity(0.03)), _buildRing(320, Colors.white.withOpacity(0.02)), Hero(tag: "product_${_product!.id}", child: Image.asset(_getProductAsset(_product!.name), width: 250, height: 250, fit: BoxFit.contain))]),
+    return SizedBox(
+      width: double.infinity, height: 380,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: ClipPath(
+              clipper: _WaveClipper(),
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF5F0004), Color(0xFF9D272B)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 0, left: -20, right: -20, top: 75,
+            child: Center(
+              child: Hero(
+                tag: "product_${_product!.id}",
+                child: _product!.imageUrl != null && _product!.imageUrl!.isNotEmpty 
+                  ? Image.network(
+                      AppConstants.baseUrl.replaceAll('/api/v1', '') + _product!.imageUrl!,
+                      fit: BoxFit.contain,
+                      errorBuilder: (c, e, s) => Image.asset(_getProductAsset(_product!.name), fit: BoxFit.contain),
+                    )
+                  : Image.asset(_getProductAsset(_product!.name), fit: BoxFit.contain),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildRing(double size, Color color) => Container(width: size, height: size, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: color, width: 20)));
-  Widget _buildCircleNav(IconData icon, VoidCallback onTap, {Color? color, Color? iconColor}) => GestureDetector(onTap: onTap, child: Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color ?? Colors.white.withOpacity(0.2), shape: BoxShape.circle), child: Icon(icon, color: iconColor ?? Colors.white, size: 24)));
-  Widget _buildQtyButton(IconData icon, VoidCallback onTap) => GestureDetector(onTap: onTap, child: Container(padding: const EdgeInsets.all(8), decoration: const BoxDecoration(color: Color(0xFFEBE2D5), shape: BoxShape.circle), child: Icon(icon, color: const Color(0xFF4D4D4D), size: 20)));
+  Widget _buildCircleNav(IconData icon, VoidCallback onTap, {Color? color, Color? iconColor}) => GestureDetector(onTap: onTap, child: Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color ?? Colors.white.withOpacity(0.35), shape: BoxShape.circle), child: Icon(icon, color: iconColor ?? Colors.white, size: 24)));
+  Widget _buildQtyCircleButton(IconData icon, Color bgColor, Color iconColor, VoidCallback onTap) => GestureDetector(onTap: onTap, child: Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: bgColor, shape: BoxShape.circle), child: Icon(icon, color: iconColor, size: 22)));
+}
+
+class _WaveClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    var path = Path();
+    path.lineTo(0, size.height * 0.70);
+    
+    var firstControlPoint = Offset(size.width * 0.25, size.height * 0.90);
+    var firstEndPoint = Offset(size.width * 0.5, size.height * 0.75);
+    path.quadraticBezierTo(firstControlPoint.dx, firstControlPoint.dy, firstEndPoint.dx, firstEndPoint.dy);
+
+    var secondControlPoint = Offset(size.width * 0.75, size.height * 0.60);
+    var secondEndPoint = Offset(size.width, size.height * 0.75);
+    path.quadraticBezierTo(secondControlPoint.dx, secondControlPoint.dy, secondEndPoint.dx, secondEndPoint.dy);
+    
+    path.lineTo(size.width, 0);
+    path.close();
+    return path;
+  }
+  @override bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }

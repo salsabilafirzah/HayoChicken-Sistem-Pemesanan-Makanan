@@ -5,9 +5,10 @@ import '../services/cart_service.dart';
 class CartState {
   final List<CartItemModel> items;
   final bool isLoading;
-  final bool isUpdating; // New flag for minor updates
+  final bool isUpdating;
+  final String? error;
 
-  CartState({this.items = const [], this.isLoading = false, this.isUpdating = false});
+  CartState({this.items = const [], this.isLoading = false, this.isUpdating = false, this.error});
 
   int get totalAmount {
     int total = 0;
@@ -22,11 +23,12 @@ class CartState {
   int get checkedCount => items.where((i) => i.isChecked).length;
   int get totalCount => items.fold(0, (sum, i) => sum + i.quantity);
 
-  CartState copyWith({List<CartItemModel>? items, bool? isLoading, bool? isUpdating}) {
+  CartState copyWith({List<CartItemModel>? items, bool? isLoading, bool? isUpdating, String? error, bool clearError = false}) {
     return CartState(
       items: items ?? this.items,
       isLoading: isLoading ?? this.isLoading,
       isUpdating: isUpdating ?? this.isUpdating,
+      error: clearError ? null : (error ?? this.error),
     );
   }
 }
@@ -39,9 +41,13 @@ class CartNotifier extends StateNotifier<CartState> {
   }
 
   Future<void> refreshCart() async {
-    state = state.copyWith(isLoading: true);
-    final items = await _service.getCart();
-    state = state.copyWith(items: items, isLoading: false);
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      final items = await _service.getCart();
+      state = state.copyWith(items: items, isLoading: false);
+    } catch (e, stack) {
+      state = state.copyWith(isLoading: false, error: e.toString() + "\n" + stack.toString(), items: []);
+    }
   }
 
   Future<void> addToCart({
@@ -50,15 +56,22 @@ class CartNotifier extends StateNotifier<CartState> {
     required List<String> extras,
     String? note,
   }) async {
-    state = state.copyWith(isUpdating: true);
-    final success = await _service.addToCart(
-      productId: productId,
-      quantity: quantity,
-      extras: extras,
-      note: note,
-    );
-    final items = await _service.getCart();
-    state = state.copyWith(items: items, isUpdating: false);
+    state = state.copyWith(isUpdating: true, clearError: true);
+    try {
+      final success = await _service.addToCart(
+        productId: productId,
+        quantity: quantity,
+        extras: extras,
+        note: note,
+      );
+      if (!success) {
+         state = state.copyWith(error: "Failure from _service.addToCart");
+      }
+      final items = await _service.getCart();
+      state = state.copyWith(items: items, isUpdating: false);
+    } catch (e, stack) {
+      state = state.copyWith(isLoading: false, isUpdating: false, error: e.toString() + "\n" + stack.toString());
+    }
   }
 
   Future<void> toggleCheck(int itemId) async {
@@ -128,11 +141,14 @@ class CartNotifier extends StateNotifier<CartState> {
     
     state = state.copyWith(isUpdating: true);
     
+    // We need to iterate over the OLD items to know what needs to be toggled on the server
+    final oldItems = state.items;
+
     // Optimistic UI update
     final updatedItems = state.items.map((i) => i.copyWith(isChecked: newState)).toList();
     state = state.copyWith(items: updatedItems);
 
-    for (var item in state.items) {
+    for (var item in oldItems) {
       if (item.isChecked != newState) {
         await _service.toggleCheck(item.id);
       }

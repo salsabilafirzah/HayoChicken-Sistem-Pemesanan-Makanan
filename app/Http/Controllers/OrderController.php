@@ -243,11 +243,16 @@ class OrderController extends Controller
     /**
      * List all orders (Seller Only). [Bug #7]
      */
-    public function allOrders()
+    public function allOrders(\Illuminate\Http\Request $request)
     {
-        $orders = Order::with(['orderItems', 'user'])
-            ->orderBy('created_at', 'DESC')
-            ->get();
+        $query = Order::with(['orderItems', 'user'])
+            ->orderBy('created_at', 'DESC');
+            
+        if ($request->has('status') && $request->status !== 'ALL') {
+            $query->where('status', $request->status);
+        }
+        
+        $orders = $query->get();
             
         return response()->json([
             'success' => true,

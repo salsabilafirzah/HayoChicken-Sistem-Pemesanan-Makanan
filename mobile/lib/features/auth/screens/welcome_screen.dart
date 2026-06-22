@@ -18,24 +18,33 @@ class WelcomeScreen extends StatelessWidget {
               Center(
                 child: Column(
                   children: [
-                    const Text(
-                      "HAYO\nCHICKEN",
+                    RichText(
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Color(0xFFFFB800),
-                        fontSize: 48,
-                        fontWeight: FontWeight.w900,
-                        height: 0.9,
+                      text: const TextSpan(
+                        style: TextStyle(
+                          fontSize: 84, // Aggressively scaled typography
+                          fontWeight: FontWeight.w900,
+                          height: 0.85,
+                          letterSpacing: 1.5,
+                        ),
+                        children: [
+                          TextSpan(text: "HAYO\n", style: TextStyle(color: Colors.white)),
+                          TextSpan(text: "CHICKEN", style: TextStyle(color: Color(0xFFFFB800))),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    Image.asset(
-                      'assets/logo_hayo.png',
-                      height: 250,
-                      errorBuilder: (context, error, stackTrace) => const Icon(
-                        Icons.restaurant_menu,
-                        size: 200,
-                        color: Colors.white,
+                    const SizedBox(height: 10),
+                    Transform.scale(
+                      scale: 4.8, // Aggressively scaling logic past massive transparency bounds
+                      child: Image.asset(
+                        'assets/logo_hayo.png',
+                        height: 160, // Smaller base to allow massive scale out organically
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) => const Icon(
+                          Icons.restaurant_menu,
+                          size: 160,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ],
@@ -84,7 +93,7 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 60),
+              const SizedBox(height: 100),
             ],
           ),
         ),

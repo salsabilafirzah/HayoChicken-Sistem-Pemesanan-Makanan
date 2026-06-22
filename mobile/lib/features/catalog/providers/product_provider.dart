@@ -40,20 +40,35 @@ class ProductNotifier extends StateNotifier<ProductState> {
 
   Future<void> loadData() async {
     state = state.copyWith(isLoading: true);
+    
+    List<ProductModel> products = [];
+    List<CategoryModel> categories = [];
+    List<int> favorites = [];
+
     try {
-      final products = await _service.getProducts();
-      final categories = await _service.getCategories();
-      final favorites = await _service.getFavorites();
-      
-      state = state.copyWith(
-        products: products,
-        categories: categories,
-        favoriteIds: favorites,
-        isLoading: false,
-      );
+      products = await _service.getProducts();
     } catch (e) {
-      state = state.copyWith(isLoading: false);
+      // Allow partial failure
     }
+    
+    try {
+      categories = await _service.getCategories();
+    } catch (e) {
+      // Allow partial failure
+    }
+    
+    try {
+      favorites = await _service.getFavorites();
+    } catch (e) {
+      // Allow partial failure
+    }
+    
+    state = state.copyWith(
+      products: products,
+      categories: categories,
+      favoriteIds: favorites,
+      isLoading: false,
+    );
   }
 
   Future<void> toggleFavorite(int productId) async {

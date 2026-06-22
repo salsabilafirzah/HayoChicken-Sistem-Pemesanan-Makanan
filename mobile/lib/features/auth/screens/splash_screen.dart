@@ -53,25 +53,28 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 32.0),
           child: Column(
             children: [
-              const Spacer(flex: 2),
+              const Spacer(flex: 3),
               
               Hero(
                 tag: 'logo',
-                child: Image.asset(
-                  'assets/app_icon.png', 
-                  width: 200, 
-                  height: 200, 
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) => const Icon(Icons.restaurant, size: 120, color: Colors.white),
+                child: Transform.scale(
+                  scale: 1.5,
+                  child: Image.asset(
+                    'assets/app_icon.png', 
+                    width: 320, 
+                    height: 320, 
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => const Icon(Icons.restaurant, size: 120, color: Colors.white),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
               
-              const Spacer(flex: 3),
+              const Spacer(flex: 2),
 
               if (_showButtons)
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 40),
+                  padding: const EdgeInsets.only(bottom: 140),
                   child: Row(
                     children: [
                       Expanded(

@@ -31,6 +31,7 @@ class ProductService {
       final response = await _api.get('/products/$id');
       return ProductModel.fromJson(response.data['data']);
     } catch (e) {
+      print("GET_PRODUCT_ERROR: $e");
       return null;
     }
   }
