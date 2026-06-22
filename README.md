@@ -10,7 +10,7 @@ Proyek ini dibangun menggunakan standar pengembangan perangkat lunak modern untu
 | **Backend & API Services** | Laravel (PHP) | Mengendalikan _business logic_, *State Machine* pesanan, dan analitik BOM. |
 | **Frontend / Mobile Client** | Flutter (Dart) | Antarmuka dinamis dan responsif dengan integrasi _Optimistic UI_ untuk *cart*. |
 | **Database Management** | MySQL Relational Database | Basis data relasional terpusat untuk menjaga integritas transaksi. |
-| **Security & Auth** | Laravel Sanctum | Pengamanan terpadu lapis-RESTful berbasis *Token-Based Authentication*. |
+| **Security & Auth** | **JWT (JSON Web Token)** | Pengamanan terpadu lapis-RESTful berbasis *Token-Based Authentication* dengan Refresh Token Rotation. |
 
 ---
 
@@ -22,7 +22,7 @@ Berbeda dengan proyek *boilerplate* konvensional, repositori ini memamerkan impl
 Modul pintar untuk memastikan manajemen inventaris yang presisi. Sistem tidak hanya mengolah pesanan, tetapi ikut memprediksi dan memonitor ketersediaan bahan mentah berdasarkan pergerakan transaksi *real-time*. Ini mencegah *overselling* dan mitigasi kehabisan suplai bahan.
 
 ### 2. Strict State Machine Validation
-Siklus hidup setiap order (contoh: `Pending` -> `Diproses` -> `Siap` -> `Selesai` atau `Dibatalkan`) dijaga dan divalidasi ke dalam pola operasional **State Machine**. Tidak ada jalan pintas yang merusak integritas *database*, mencegah anomali status (misalnya order yang sudah selesai tiba-tiba dibatalkan).
+Siklus hidup setiap order (contoh: **NEW -> PROCESSING -> DELIVERING -> DONE atau REJECTED**) dijaga dan divalidasi ke dalam pola operasional **State Machine**. Tidak ada jalan pintas yang merusak integritas *database*, mencegah anomali status (misalnya order yang sudah selesai tiba-tiba dibatalkan).
 
 ### 3. Rejection Reason Tracking
 Setiap tindakan pembatalan diwajibkan untuk dijustifikasi. Penjual harus menyertakan **Alasan Penolakan** (Rejection Reason) yang akan disematkan ke dalam rekam jejak pesanan secara tepercaya. Sangat berguna untuk audit dan menjaga transparansi operasional bisnis.
@@ -76,7 +76,7 @@ Berikut adalah akun yang terbentuk secara otomatis hasil dari instruksi _Seeder_
 **2. Akses Pembeli (Buyer)**
 - Email: **budi@gmail.com**
 - Password: **password123**
-- *Fitur: Eksplorasi Menu, Tambah Keranjang Mutakhir (Optimistic Loading), dan Checkout.*
+- *Fitur: Eksplorasi Menu, Tambah Keranjang Mutakhir (Optimistic Loading), dan **Checkout (COD & QRIS Statis Manual)**.*
 
 ---
 
