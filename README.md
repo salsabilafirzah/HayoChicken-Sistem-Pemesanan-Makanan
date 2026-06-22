@@ -1,12 +1,41 @@
-# 🍗 Hayo Chicken App
+# Hayo Chicken - Sistem Informasi E-Commerce Kuliner & Ordering
 
-Aplikasi Point of Sale (POS) & Ordering kekinian untuk **Hayo Chicken**! Memiliki fitur _Seamless Checkout_, _Optimistic Cart Update_, _Real-time Promo_, dan dua buah dashboard khusus (Pembeli & Penjual) dalam satu ekosistem yang solid. 
+Sistem Informasi E-Commerce Kuliner & Ordering terpadu untuk **Hayo Chicken**, dirancang secara komprehensif untuk menangani seluruh siklus transaksi *end-to-end*. Mulai dari proses pemesanan oleh pelanggan hingga manajemen operasional dan ketersediaan bahan baku (BOM) oleh penjual. Sistem ini menyatukan dua lingkungan operasi khusus (Akses Pembeli & Akses Penjual) ke dalam satu ekosistem yang kohesif.
 
-Dibangun dengan stack **Laravel (Backend/API)** dan **Flutter (Mobile App)**.
+## Tech Stack & Arsitektur
+
+Proyek ini dibangun menggunakan standar pengembangan perangkat lunak modern untuk memastikan skalabilitas dan performa:
+| Komponen Arsitektur | Teknologi Utama | Deskripsi Integrasi |
+| :--- | :--- | :--- |
+| **Backend & API Services** | Laravel (PHP) | Mengendalikan _business logic_, *State Machine* pesanan, dan analitik BOM. |
+| **Frontend / Mobile Client** | Flutter (Dart) | Antarmuka dinamis dan responsif dengan integrasi _Optimistic UI_ untuk *cart*. |
+| **Database Management** | MySQL Relational Database | Basis data relasional terpusat untuk menjaga integritas transaksi. |
+| **Security & Auth** | Laravel Sanctum | Pengamanan terpadu lapis-RESTful berbasis *Token-Based Authentication*. |
 
 ---
 
-## ⚡ Cara Instalasi (Clone Repo)
+## Fitur Unggulan Sistem (Key Highlights)
+
+Berbeda dengan proyek *boilerplate* konvensional, repositori ini memamerkan implementasi *business logic* kompleks yang siap-produksi, di antaranya:
+
+### 1. Smart Forecasting & Analitik BOM (Bill of Materials)
+Modul pintar untuk memastikan manajemen inventaris yang presisi. Sistem tidak hanya mengolah pesanan, tetapi ikut memprediksi dan memonitor ketersediaan bahan mentah berdasarkan pergerakan transaksi *real-time*. Ini mencegah *overselling* dan mitigasi kehabisan suplai bahan.
+
+### 2. Strict State Machine Validation
+Siklus hidup setiap order (contoh: `Pending` -> `Diproses` -> `Siap` -> `Selesai` atau `Dibatalkan`) dijaga dan divalidasi ke dalam pola operasional **State Machine**. Tidak ada jalan pintas yang merusak integritas *database*, mencegah anomali status (misalnya order yang sudah selesai tiba-tiba dibatalkan).
+
+### 3. Rejection Reason Tracking
+Setiap tindakan pembatalan diwajibkan untuk dijustifikasi. Penjual harus menyertakan **Alasan Penolakan** (Rejection Reason) yang akan disematkan ke dalam rekam jejak pesanan secara tepercaya. Sangat berguna untuk audit dan menjaga transparansi operasional bisnis.
+
+### 4. Optimistic UI Cart (Bebas Lag)
+Pengalaman *checkout* dibuat instan bagi para pelanggan! Memanfaatkan teknik state management **Optimistic Loading**, manipulasi _item_ pada keranjang (tambah/hapus) langsung berubah pada antarmuka pengguna secepat kilat (0-detik) tanpa *freeze*, sebelum sinkronisasi *background* dengan server selesai.
+
+### 5. Multi-Layer Role Middleware
+Setiap transaksi keuangan, keranjang belanja, hingga hak akses antarmuka diproteksi secara proaktif (_Hard-Coded Security_) lewat kombinasi autentikasi dinamis dan *Middleware Role*.
+
+---
+
+## Cara Instalasi (Clone Repo)
 
 Database asli **tidak ikut di-upload** demi keamanan. Jangan khawatir! Aplikasi ini sudah dipersenjatai dengan *Migration* dan *Seeder* pintar yang akan membangun ulang struktur dan menaburkan data Dummy dengan satu baris perintah.
 
@@ -20,7 +49,7 @@ cd HayoChicken-Sistem-Pemesanan-Makanan
 # 3. Instal semua dependency PHP
 composer install
 
-# 4. Salin file environment dan atur Database Anda
+# 4. Salin file environment dan atur setelan Database Anda
 cp .env.example .env
 php artisan key:generate
 
@@ -35,25 +64,20 @@ php artisan serve --host=0.0.0.0
 
 ---
 
-## 🔑 Kredensial Login (Testing Demo)
+## Kredensial Login (Testing Demo)
 
-Berikut adalah akun yang terbentuk secara otomatis hasil dari instruksi _Seeder_ di atas. Gunakan ini untuk login ke aplikasi saat demonstrasi Dosen:
+Berikut adalah akun yang terbentuk secara otomatis hasil dari instruksi _Seeder_ di atas. Gunakan ini untuk *login* ke dalam aplikasi ketika proses *testing* atau demonstrasi:
 
-**1. 👨‍🍳 Akses Penjual (Seller / Admin)**
+**1. Akses Penjual (Seller / Admin)**
 - Email: **admin@hayochicken.com**
 - Password: **password123**
-- *Fitur: Menerima Pesanan, Membatalkan Pesanan, Menambahkan Menu, Dashboard Analitik.*
+- *Fitur: Menerima Pesanan, Membatalkan Pesanan, Menambahkan Menu, Dashboard Analitik BOM.*
 
-**2. 🍔 Akses Pembeli (Buyer)**
+**2. Akses Pembeli (Buyer)**
 - Email: **budi@gmail.com**
 - Password: **password123**
-- *Fitur: Eksplorasi Menu, Klaim Promo Jumat Secara Instan, Tambah Keranjang Mutakhir (Optimistic Loading), dan Checkout.*
+- *Fitur: Eksplorasi Menu, Tambah Keranjang Mutakhir (Optimistic Loading), dan Checkout.*
 
 ---
 
-## ✨ Fitur Unggulan Sistem
-- **Optimistic UI Cart**: Menghapus item keranjang nol-detik tanpa membebani otak server (anti *lag*).
-- **Hard-Coded Security**: Jalur transaksi dan riwayat catatan yang diproteksi *Middleware Role*.
-- **Live Rejection & Notes**: Logika pencatatan obrolan mutakhir di mana Penjual dan Pembeli bisa saling meninggalkan "Catatan Transaksi".
-
-Selamat berkarya dan menikmati kelezatan kodenya! 🚀
+Selamat berkarya dan menikmati kelezatan kodenya!
