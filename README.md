@@ -24,13 +24,10 @@ Modul pintar untuk memastikan manajemen inventaris yang presisi. Sistem tidak ha
 ### 2. Strict State Machine Validation
 Siklus hidup setiap order (contoh: **NEW -> PROCESSING -> DELIVERING -> DONE atau REJECTED**) dijaga dan divalidasi ke dalam pola operasional **State Machine**. Tidak ada jalan pintas yang merusak integritas *database*, mencegah anomali status (misalnya order yang sudah selesai tiba-tiba dibatalkan).
 
-### 3. Rejection Reason Tracking
-Setiap tindakan pembatalan diwajibkan untuk dijustifikasi. Penjual harus menyertakan **Alasan Penolakan** (Rejection Reason) yang akan disematkan ke dalam rekam jejak pesanan secara tepercaya. Sangat berguna untuk audit dan menjaga transparansi operasional bisnis.
-
-### 4. Optimistic UI Cart (Bebas Lag)
+### 3. Optimistic UI Cart (Bebas Lag)
 Pengalaman *checkout* dibuat instan bagi para pelanggan! Memanfaatkan teknik state management **Optimistic Loading**, manipulasi _item_ pada keranjang (tambah/hapus) langsung berubah pada antarmuka pengguna secepat kilat (0-detik) tanpa *freeze*, sebelum sinkronisasi *background* dengan server selesai.
 
-### 5. Multi-Layer Role Middleware
+### 4. Multi-Layer Role Middleware
 Setiap transaksi keuangan, keranjang belanja, hingga hak akses antarmuka diproteksi secara proaktif (_Hard-Coded Security_) lewat kombinasi autentikasi dinamis dan *Middleware Role*.
 
 ---
