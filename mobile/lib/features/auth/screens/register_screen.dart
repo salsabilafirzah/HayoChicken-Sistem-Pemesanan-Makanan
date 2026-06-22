@@ -20,6 +20,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _confirmController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  bool _isPasswordVisible = false;
+  bool _isConfirmVisible = false;
 
   void _handleRegister() async {
     if (_formKey.currentState!.validate()) {
@@ -131,9 +133,34 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _passwordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(hintText: "Min 8 karakter"),
+                      obscureText: !_isPasswordVisible,
+                      decoration: InputDecoration(
+                        hintText: "Min 8 karakter",
+                        suffixIcon: IconButton(
+                          icon: Icon(_isPasswordVisible ? Icons.visibility : Icons.visibility_off, color: Colors.grey),
+                          onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
+                        ),
+                      ),
                       validator: (v) => v!.length < 8 ? "Minimal 8 karakter" : null,
+                    ),
+                    const SizedBox(height: 20),
+                    Text("Konfirmasi Password", style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 14)),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _confirmController,
+                      obscureText: !_isConfirmVisible,
+                      decoration: InputDecoration(
+                        hintText: "Ketik ulang password",
+                        suffixIcon: IconButton(
+                          icon: Icon(_isConfirmVisible ? Icons.visibility : Icons.visibility_off, color: Colors.grey),
+                          onPressed: () => setState(() => _isConfirmVisible = !_isConfirmVisible),
+                        ),
+                      ),
+                      validator: (v) {
+                        if (v!.isEmpty) return "Wajib diisi";
+                        if (v != _passwordController.text) return "Password tidak cocok";
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 32),
                     SizedBox(

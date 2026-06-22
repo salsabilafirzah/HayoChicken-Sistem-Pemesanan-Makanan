@@ -26,9 +26,9 @@ class AuthService {
       }
       return {'success': false, 'message': 'Login gagal'};
     } on DioException catch (e) {
-      return {'success': false, 'message': e.response?.data['message'] ?? 'Error: ${e.message}'};
+      return {'success': false, 'message': e.response?.data['message'] ?? 'Gagal terhubung ke server. Server sedang mati atau koneksi lambat.'};
     } catch (e) {
-      return {'success': false, 'message': 'Unknown Error: $e'};
+      return {'success': false, 'message': 'Terjadi kesalahan pada sistem. Silakan coba lagi.'};
     }
   }
 
@@ -53,9 +53,9 @@ class AuthService {
       }
       return {'success': false, 'message': 'Registrasi gagal'};
     } on DioException catch (e) {
-      return {'success': false, 'message': e.response?.data['message'] ?? 'Error: ${e.message}'};
+      return {'success': false, 'message': e.response?.data['message'] ?? 'Gagal terhubung ke server. Server sedang mati atau koneksi lambat.'};
     } catch (e) {
-      return {'success': false, 'message': 'Unknown Error: $e'};
+      return {'success': false, 'message': 'Terjadi kesalahan pada sistem. Silakan coba lagi.'};
     }
   }
 

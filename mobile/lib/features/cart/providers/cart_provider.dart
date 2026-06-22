@@ -114,11 +114,15 @@ class CartNotifier extends StateNotifier<CartState> {
   }
 
   Future<void> removeItem(int itemId) async {
-    state = state.copyWith(isUpdating: true);
+    // Optimistic Update: Hapus sementara di UI agar terasa instan & tidak ngelag
+    final oldItems = state.items;
+    final updatedItems = state.items.where((i) => i.id != itemId).toList();
+    state = state.copyWith(items: updatedItems, isUpdating: true);
+
     final success = await _service.deleteItem(itemId);
-    if (success) {
-      final items = await _service.getCart();
-      state = state.copyWith(items: items);
+    if (!success) {
+      // Rollback jika terjadi masalah jaringan
+      state = state.copyWith(items: oldItems);
     }
     state = state.copyWith(isUpdating: false);
   }

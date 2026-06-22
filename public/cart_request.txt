@@ -1,6 +1,6 @@
 {
-    "product_id": 18,
+    "product_id": 13,
     "quantity": 1,
     "selected_extras_snapshot": [],
-    "note": null
+    "note": "mangganya pakai mangga manalagi"
 }

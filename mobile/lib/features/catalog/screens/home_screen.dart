@@ -263,7 +263,60 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return GestureDetector(
       onTap: () {
         if (btn == "Klaim Promo") {
-          _showPromoDialog(context);
+          if (DateTime.now().weekday != DateTime.friday) {
+            showDialog(
+              context: context,
+              builder: (ctx) => Dialog(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(35)),
+                backgroundColor: Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 90, height: 90,
+                        decoration: BoxDecoration(color: Colors.red.shade50, shape: BoxShape.circle),
+                        child: Icon(Icons.sentiment_dissatisfied_rounded, color: Colors.red.shade400, size: 50),
+                      ),
+                      const SizedBox(height: 24),
+                      Text("Promo Eksklusif!", style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.w900, color: const Color(0xFF1A1A1A))),
+                      const SizedBox(height: 14),
+                      Text(
+                        "Maaf, Promo ini eksklusif hanya bisa diklaim tiap hari Jumat!",
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.inter(fontSize: 13, color: Colors.black54, height: 1.5, fontWeight: FontWeight.w500),
+                      ),
+                      const SizedBox(height: 32),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            elevation: 10,
+                            shadowColor: AppColors.primary.withOpacity(0.4),
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
+                          ),
+                          child: Text("Tutup", textAlign: TextAlign.center, style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          } else {
+            // Jika Jumat, tambahkan ke keranjang (dengan note catatan spesial harga 0)
+            ref.read(cartProvider.notifier).addToCart(
+              productId: productId, 
+              quantity: 1, 
+              extras: [], 
+              note: "PROMO EKSKLUSIF JUMAT BERKAH"
+            );
+            _showPromoDialog(context);
+          }
         } else {
           context.push('/product/$productId');
         }
@@ -296,7 +349,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             Hero(
               tag: "banner_$productId",
               child: Transform.scale(
-                scale: asset.contains('paket_geprek') ? 1.6 : 1.0,
+                scale: asset.contains('three_lemon_teas') ? 2.5 : 1.6,
                 child: Image.asset(asset, width: 130, height: 130, fit: BoxFit.contain),
               ),
             ),

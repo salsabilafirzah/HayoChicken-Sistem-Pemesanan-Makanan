@@ -467,6 +467,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         final orderObj = rootData?['data']; // This is the $order Eloquent model
         final orderNumber = rootData?['order_number'] ?? "#HC-${DateTime.now().millisecondsSinceEpoch}";
         
+        // REFRESH KERANJANG AGAR KOSONG SETELAH CHECKOUT CO SUKSES
+        ref.read(cartProvider.notifier).refreshCart();
+
         context.go('/order-success', extra: {
           'order_number': orderNumber,
           'total_amount': orderObj?['total_amount']?.toString() ?? "0",
