@@ -10,7 +10,7 @@ Proyek ini dibangun menggunakan standar pengembangan perangkat lunak modern untu
 | **Backend & API Services** | Laravel (PHP) | Mengendalikan _business logic_, *State Machine* pesanan, dan analitik BOM. |
 | **Frontend / Mobile Client** | Flutter (Dart) | Antarmuka dinamis dan responsif dengan integrasi _Optimistic UI_ untuk *cart*. |
 | **Database Management** | MySQL Relational Database | Basis data relasional terpusat untuk menjaga integritas transaksi. |
-| **Security & Auth** | **JWT (JSON Web Token)** | Pengamanan terpadu lapis-RESTful berbasis *Token-Based Authentication* dengan Refresh Token Rotation. |
+| **Security & Auth** | JWT (JSON Web Token) | Pengamanan terpadu lapis-RESTful berbasis *Token-Based Authentication* dengan Refresh Token Rotation. |
 
 ---
 
